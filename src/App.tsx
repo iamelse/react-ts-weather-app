@@ -32,8 +32,7 @@ export default function App() {
 
   useEffect(() => {
     const stored = getStoredCities() ?? [];
-
-    setCities(stored.length > 0 ? stored : [fallbackCity]);
+    setCities(stored.length ? stored : [fallbackCity]);
   }, []);
 
   /* ==========================
@@ -41,24 +40,18 @@ export default function App() {
   ========================== */
   const [selectedCity, setSelectedCity] = useState<City>(() => {
     const stored = getStoredCities() ?? [];
-
-    return (
-      stored.find((c) => c.is_favorite) ??
-      fallbackCity
-    );
+    return stored.find((c) => c.is_favorite) ?? fallbackCity;
   });
 
   /* ==========================
-     UPDATE CITIES (FROM MODAL)
+     UPDATE FROM MODAL
   ========================== */
   const handleCitiesUpdate = (updated: City[]) => {
     setCities(updated);
     saveCities(updated);
 
     const favorite = updated.find((c) => c.is_favorite);
-    if (favorite) {
-      setSelectedCity(favorite);
-    }
+    if (favorite) setSelectedCity(favorite);
   };
 
   const handleSelectCity = (city: City) => {
@@ -67,10 +60,11 @@ export default function App() {
   };
 
   /* ==========================
-     WEATHER & UI
+     WEATHER
   ========================== */
   const BASE_URL = import.meta.env.VITE_BASE_URL;
-  const { weather, loading, error } = useWeather(selectedCity, BASE_URL);
+  const { weather, loading, error } =
+    useWeather(selectedCity, BASE_URL);
 
   const phase = useDayPhase();
   const bgGradient = getBackgroundByWeather(
@@ -80,7 +74,7 @@ export default function App() {
 
   return (
     <div
-      className="min-h-screen w-full text-white"
+      className="min-h-screen w-full text-white relative"
       style={{
         background: `linear-gradient(to bottom, ${bgGradient.from}, ${bgGradient.to})`,
       }}
@@ -94,18 +88,40 @@ export default function App() {
         onOpenModal={() => setIsModalOpen(true)}
       />
 
-      {/* MENU BUTTON */}
+      {/* OVERLAY */}
+      <div
+        onClick={() => setMenuOpen(false)}
+        className={`fixed inset-0 z-20
+          bg-black/10 backdrop-blur-sm
+          transition-opacity duration-500
+          ${menuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
+        `}
+      />
+
+      {/* HAMBURGER (GESER SAAT SIDEBAR OPEN) */}
       <button
-        className="fixed top-4 left-4 z-50 p-2 rounded-lg bg-white/10 backdrop-blur"
+        className={`fixed top-4 z-50 p-2 rounded-lg
+          bg-white/10 backdrop-blur
+          transition-all duration-500 ease-out
+          ${menuOpen ? "ms-4 left-72" : "left-4"}
+        `}
         onClick={() => setMenuOpen((v) => !v)}
       >
         <Menu className="w-5 h-5" />
       </button>
 
-      {/* MAIN */}
+      {/* MAIN CONTENT */}
       <div className="px-4 py-10 flex flex-col items-center">
-        {loading && <p>Loading weather...</p>}
-        {error && <p className="text-red-400">{error}</p>}
+        {loading && (
+          <p className="text-white/70">
+            Loading weather...
+          </p>
+        )}
+        {error && (
+          <p className="text-red-400">
+            {error}
+          </p>
+        )}
 
         <WeatherHeader
           weather={weather}
