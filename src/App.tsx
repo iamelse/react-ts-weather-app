@@ -1,17 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Menu } from "lucide-react";
 import Sidebar from "./components/Sidebar/Sidebar";
 import WeatherHeader from "./components/WeatherHeader/WeatherHeader";
 import HourlyChart from "./components/HourlyChart/HourlyChart";
 import WeeklyForecast from "./components/WeeklyForecast/WeeklyForecast";
-import type { WeatherState, City } from "./types/weather";
+import type { City } from "./types/weather";
 import { getBackgroundByWeather } from "./utils/weather";
 import { useDayPhase } from "./hooks/useDayPhase";
-import {
-  fetchCurrentWeather,
-  fetchHourlyWeather,
-  fetchWeeklyWeather,
-} from "./api/weather";
+import { useWeather } from "./hooks/useWeather";
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -23,50 +19,24 @@ export default function App() {
     longitude: 109.0142,
   });
 
-  const [weather, setWeather] = useState<WeatherState>({
-    hourly: [],
-    weekly: [],
-    temp: 0,
-    feels_like: 0,
-    wind_speed: 0,
-    humidity: 0,
-    uv_index: 0,
-    sunrise: "N/A",
-    sunset: "N/A",
-  });
-
   const BASE_URL = import.meta.env.VITE_BASE_URL;
 
   /* =======================
-     FETCH WEATHER
+     HOOK: FETCH WEATHER
   ======================= */
-
-  useEffect(() => {
-    const { latitude, longitude } = selectedCity;
-
-    fetchCurrentWeather(latitude, longitude, BASE_URL)
-      .then((data) => setWeather((prev) => ({ ...prev, ...data })));
-
-    fetchHourlyWeather(latitude, longitude, BASE_URL)
-      .then((hourly) => setWeather((prev) => ({ ...prev, hourly })));
-
-    fetchWeeklyWeather(latitude, longitude, BASE_URL)
-      .then((weekly) => setWeather((prev) => ({ ...prev, weekly })));
-  }, [selectedCity, BASE_URL]);
+  const { weather, loading, error } = useWeather(selectedCity, BASE_URL);
 
   /* =======================
-     SIDEBAR HANDLER ✅
+     SIDEBAR HANDLER
   ======================= */
-
   const handleSelectCity = (city: City) => {
     setSelectedCity(city);
-    setMenuOpen(false); // ⬅️ auto close
+    setMenuOpen(false);
   };
 
   /* =======================
      BACKGROUND (TIME + WEATHER)
   ======================= */
-
   const phase = useDayPhase();
   const bgGradient = getBackgroundByWeather(weather.current_code, phase);
 
@@ -99,6 +69,9 @@ export default function App() {
       </button>
 
       <div className="px-4 py-10 flex flex-col items-center relative z-0">
+        {loading && <p className="text-white/80 mb-4">Loading weather...</p>}
+        {error && <p className="text-red-400 mb-4">{error}</p>}
+
         <WeatherHeader weather={weather} selectedCity={selectedCity} />
         <HourlyChart hourly={weather.hourly} />
         <WeeklyForecast weekly={weather.weekly} />
