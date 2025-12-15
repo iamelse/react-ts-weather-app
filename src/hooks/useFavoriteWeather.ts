@@ -1,4 +1,5 @@
-import type { City, CurrentWeather } from "../types/weather";
+import type { CurrentWeather } from "../types/weather";
+import type { City } from "../types/city";
 import { fetchCurrentCityWeather } from "../api/weather";
 import { useEffect, useState } from "react";
 

@@ -1,4 +1,5 @@
-import type { City, CurrentWeather, HourlyItem, WeeklyItemType } from "../types/weather";
+import type { CurrentWeather, HourlyItem, WeeklyItemType } from "../types/weather";
+import type { City } from "../types/city";
 import { getWeatherInfo } from "../utils/weather";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;

@@ -1,5 +1,5 @@
 import { Star, Info } from "lucide-react";
-import type { City } from "../../types/weather";
+import type { City } from "../../types/city";
 import { getWeatherInfo } from "../../utils/weather";
 import { useFavoriteWeather } from "../../hooks/useFavoriteWeather";
 

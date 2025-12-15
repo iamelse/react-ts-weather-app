@@ -1,6 +1,7 @@
 import { MapPin } from "lucide-react";
 import { formatTempDisplay } from "../../utils";
-import type { City, WeatherState } from "../../types/weather";
+import type { WeatherState } from "../../types/weather";
+import type { City } from "../../types/city";
 import { useFormattedDate } from "../../hooks/useFormattedDate";
 
 interface WeatherHeaderProps {

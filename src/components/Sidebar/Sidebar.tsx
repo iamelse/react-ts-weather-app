@@ -5,7 +5,7 @@ import CityList from "./CityList";
 import FavoriteLocation from "./FavoriteLocation";
 import LocationActions from "./LocationActions";
 
-import type { City } from "../../types/weather";
+import type { City } from "../../types/city";
 import { useCityWeather } from "../../hooks/useCityWeather";
 
 interface SidebarProps {

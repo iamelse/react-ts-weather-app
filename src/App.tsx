@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Menu } from "lucide-react";
 
 import Sidebar from "./components/Sidebar/Sidebar";
@@ -7,57 +7,24 @@ import HourlyChart from "./components/HourlyChart/HourlyChart";
 import WeeklyForecast from "./components/WeeklyForecast/WeeklyForecast";
 import ManageLocationModal from "./components/Modal/ManageLocationModal";
 
-import type { City } from "./types/weather";
 import { getBackgroundByWeather } from "./utils/weather";
 import { useDayPhase } from "./hooks/useDayPhase";
 import { useWeather } from "./hooks/useWeather";
-import { getStoredCities, saveCities } from "./utils/cityStorage";
-
-const fallbackCity: City = {
-  name: "Cilacap",
-  country: "Indonesia",
-  latitude: -7.7197,
-  longitude: 109.0142,
-  is_favorite: true,
-};
+import { useCitiesStorage } from "./hooks/useCitiesStorage";
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   /* ==========================
-     CITIES (SOURCE OF TRUTH)
+     CITIES (HOOK)
   ========================== */
-  const [cities, setCities] = useState<City[]>([]);
-
-  useEffect(() => {
-    const stored = getStoredCities() ?? [];
-    setCities(stored.length ? stored : [fallbackCity]);
-  }, []);
-
-  /* ==========================
-     SELECTED CITY
-  ========================== */
-  const [selectedCity, setSelectedCity] = useState<City>(() => {
-    const stored = getStoredCities() ?? [];
-    return stored.find((c) => c.is_favorite) ?? fallbackCity;
-  });
-
-  /* ==========================
-     UPDATE FROM MODAL
-  ========================== */
-  const handleCitiesUpdate = (updated: City[]) => {
-    setCities(updated);
-    saveCities(updated);
-
-    const favorite = updated.find((c) => c.is_favorite);
-    if (favorite) setSelectedCity(favorite);
-  };
-
-  const handleSelectCity = (city: City) => {
-    setSelectedCity(city);
-    setMenuOpen(false);
-  };
+  const {
+    cities,
+    selectedCity,
+    updateCities,
+    selectCity,
+  } = useCitiesStorage();
 
   /* ==========================
      WEATHER
@@ -84,7 +51,10 @@ export default function App() {
         menuOpen={menuOpen}
         cities={cities}
         selectedCity={selectedCity}
-        handleSelect={handleSelectCity}
+        handleSelect={(city) => {
+          selectCity(city);
+          setMenuOpen(false);
+        }}
         onOpenModal={() => setIsModalOpen(true)}
       />
 
@@ -94,11 +64,15 @@ export default function App() {
         className={`fixed inset-0 z-20
           bg-black/10 backdrop-blur-sm
           transition-opacity duration-500
-          ${menuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
+          ${
+            menuOpen
+              ? "opacity-100 pointer-events-auto"
+              : "opacity-0 pointer-events-none"
+          }
         `}
       />
 
-      {/* HAMBURGER (GESER SAAT SIDEBAR OPEN) */}
+      {/* HAMBURGER */}
       <button
         className={`fixed top-4 z-50 p-2 rounded-lg
           bg-white/10 backdrop-blur
@@ -110,7 +84,7 @@ export default function App() {
         <Menu className="w-5 h-5" />
       </button>
 
-      {/* MAIN CONTENT */}
+      {/* MAIN */}
       <div className="px-4 py-10 flex flex-col items-center">
         {loading && (
           <p className="text-white/70">
@@ -137,7 +111,7 @@ export default function App() {
         onClose={() => setIsModalOpen(false)}
         bgGradient={bgGradient}
         cities={cities}
-        onCitiesUpdate={handleCitiesUpdate}
+        onCitiesUpdate={updateCities}
       />
     </div>
   );

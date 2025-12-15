@@ -1,4 +1,4 @@
-import type { City } from "../../types/weather";
+import type { City } from "../../types/city";
 import { getWeatherInfo } from "../../utils/weather";
 
 interface CityListProps {
