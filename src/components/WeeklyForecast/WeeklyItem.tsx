@@ -21,14 +21,14 @@ export default function WeeklyItem({ data }: WeeklyItemProps) {
   return (
     <div className="flex justify-between items-center py-0">
       {/* Nama hari */}
-      <span className="font-light w-24 text-white/90">{dayName}</span>
+      <span className="font-light w-24 text-white/90 drop-shadow-xs">{dayName}</span>
 
       {/* Suhu dan Icon dalam satu kolom */}
       <div className="flex items-center gap-2 w-32 justify-end">
-        <span className="font-light">
+        <span className="font-light drop-shadow-xs">
           {formatTempDisplay(data.temp_min)}° {formatTempDisplay(data.temp_max)}°
         </span>
-        {Icon && <Icon strokeWidth={1} className="w-6 h-6 opacity-90" />}
+        {Icon && <Icon strokeWidth={1} className="w-6 h-6 opacity-90 drop-shadow-xs" />}
       </div>
     </div>
   );
