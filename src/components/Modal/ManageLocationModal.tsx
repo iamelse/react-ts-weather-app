@@ -1,6 +1,15 @@
-import { useState, useEffect } from "react";
-import type { City } from "../../types/weather";
-import { X, Search, Star, Trash2, Plus } from "lucide-react";
+import { useState } from "react";
+import type { City } from "../../types/city";
+import {
+  X,
+  Search,
+  Star,
+  Trash2,
+  Plus,
+} from "lucide-react";
+
+import { useLocationSearch } from "../../hooks/useLocationSearch";
+import { formatLocationName } from "../../utils/location";
 
 interface Location {
   display_name: string;
@@ -16,12 +25,6 @@ interface ModalProps {
   onCitiesUpdate: (cities: City[]) => void;
 }
 
-/* ==========================
-   HELPERS
-========================== */
-const formatLocationName = (name: string) =>
-  name.split(",").slice(0, 3).join(", ");
-
 export default function ManageLocationModal({
   isOpen,
   onClose,
@@ -30,48 +33,12 @@ export default function ManageLocationModal({
   onCitiesUpdate,
 }: ModalProps) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Location[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  /* ==========================
-     SEARCH LOCATION (DEBOUNCED)
-  ========================== */
-  useEffect(() => {
-    if (!query.trim()) {
-      setResults([]);
-      return;
-    }
-
-    const controller = new AbortController();
-
-    const fetchLocations = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-            query
-          )}&format=json&limit=5`,
-          { signal: controller.signal }
-        );
-        setResults(await res.json());
-      } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") return;
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const debounce = setTimeout(fetchLocations, 300);
-    return () => {
-      clearTimeout(debounce);
-      controller.abort();
-    };
-  }, [query]);
+  const { results, loading } = useLocationSearch(query);
 
   /* ==========================
      ACTIONS
   ========================== */
+
   const addCity = (loc: Location) => {
     if (
       cities.some(
@@ -82,7 +49,7 @@ export default function ManageLocationModal({
     )
       return;
 
-    const updated = [
+    onCitiesUpdate([
       ...cities,
       {
         name: loc.display_name,
@@ -91,9 +58,7 @@ export default function ManageLocationModal({
         longitude: +loc.lon,
         is_favorite: cities.length === 0,
       },
-    ];
-
-    onCitiesUpdate(updated);
+    ]);
   };
 
   const removeCity = (lat: number, lon: number) => {
@@ -147,10 +112,9 @@ export default function ManageLocationModal({
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
           <input
-            type="text"
-            placeholder="Search city, region, or place..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search city, region, or place..."
             className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/10 text-white border border-white/30 placeholder-white/50 focus:outline-none focus:ring-1 focus:ring-white/40"
           />
         </div>
@@ -226,7 +190,6 @@ export default function ManageLocationModal({
                         city.longitude
                       )
                     }
-                    title="Set as favorite"
                   >
                     <Star
                       className={`w-4 h-4 transition ${
@@ -244,7 +207,6 @@ export default function ManageLocationModal({
                         city.longitude
                       )
                     }
-                    title="Remove location"
                   >
                     <Trash2 className="w-4 h-4 text-red-400 hover:text-red-300 transition" />
                   </button>

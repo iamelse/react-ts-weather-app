@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { City } from "../types/weather";
+import type { City } from "../types/city";
 import { fetchCityWeather } from "../api/weather";
 
 interface UseCityWeatherResult {

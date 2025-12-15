@@ -1,4 +1,4 @@
-import type { City } from "../types/weather";
+import type { City } from "../types/city";
 
 const STORAGE_KEY = "weather_cities";
 
