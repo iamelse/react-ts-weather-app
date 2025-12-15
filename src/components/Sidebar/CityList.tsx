@@ -1,5 +1,5 @@
 import type { City } from "../../types/weather";
-import { getWeatherIcon } from "../../utils/weather";
+import { getWeatherInfo } from "../../utils/weather";
 
 interface CityListProps {
   cities: City[];
@@ -11,7 +11,7 @@ export default function CityList({ cities, handleSelect }: CityListProps) {
     <div className="flex flex-col gap-2 mb-4 overflow-y-auto max-h-[50vh]">
       {cities.map((city) => {
         const IconComponent =
-          city.current_code !== undefined ? getWeatherIcon(city.current_code).icon : null;
+          city.current_code !== undefined ? getWeatherInfo(city.current_code).icon : null;
 
         return (
           <div

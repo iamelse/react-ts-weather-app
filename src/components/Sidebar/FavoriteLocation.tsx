@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Star, Info } from "lucide-react";
-import { getWeatherIcon } from "../../utils/weather";
+import { getWeatherInfo } from "../../utils/weather";
 import type { City } from "../../types/weather";
 
 interface FavoriteLocationProps {
@@ -38,7 +38,7 @@ export default function FavoriteLocation({ selectedCity, onSelectCity }: Favorit
     fetchWeather();
   }, [selectedCity]);
 
-  const iconData = weather ? getWeatherIcon(weather.code) : { icon: Star, text: "" };
+  const iconData = weather ? getWeatherInfo(weather.code) : { icon: Star, text: "" };
   const Icon = iconData.icon;
 
   return (
