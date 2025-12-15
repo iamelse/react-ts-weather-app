@@ -12,6 +12,7 @@ export interface City {
   longitude: number;
   current_code?: number;
   current_temp?: number;
+  is_favorite?: boolean;
 }
 
 export type BackgroundGradient = {

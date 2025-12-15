@@ -1,4 +1,8 @@
-import type { BackgroundGradient, WeatherInfo, DayPhase } from "../types/weather";
+import type {
+  BackgroundGradient,
+  WeatherInfo,
+  DayPhase,
+} from "../types/weather";
 import {
   Sun,
   Cloud,
@@ -11,35 +15,77 @@ import { hexToHsl, hslToCss } from "./color";
 import { baseWeatherColor } from "./weatherColors";
 
 /* =======================
-   ICON + TEXT
+   NORMALIZE WMO CODE
 ======================= */
+const normalizeWeatherCode = (code?: number): number => {
+  if (code == null) return -1;
 
-export const weatherMap: Record<number, WeatherInfo> = {
-  0: { icon: Sun, text: "Clear sky" },
-  1: { icon: Cloud, text: "Partly cloudy" },
-  2: { icon: Cloud, text: "Partly cloudy" },
-  3: { icon: Cloud, text: "Overcast" },
-  45: { icon: CloudDrizzle, text: "Fog" },
-  48: { icon: CloudDrizzle, text: "Fog" },
-  51: { icon: CloudDrizzle, text: "Drizzle" },
-  61: { icon: CloudRain, text: "Rain" },
-  71: { icon: CloudSnow, text: "Snow" },
-  95: { icon: CloudLightning, text: "Thunderstorm" },
-  96: { icon: CloudLightning, text: "Thunderstorm with hail" },
-  99: { icon: CloudLightning, text: "Thunderstorm with hail" },
-};
+  // Clear & clouds
+  if ([0, 1, 2, 3].includes(code)) return code;
 
-export const getWeatherInfo = (code?: number): WeatherInfo => {
-  return weatherMap[code ?? -1] ?? {
-    icon: Sun,
-    text: "Unknown",
-  };
+  // Fog
+  if ([45, 48].includes(code)) return 45;
+
+  // Drizzle (51–57)
+  if (code >= 51 && code <= 57) return 51;
+
+  // Rain (61–67)
+  if (code >= 61 && code <= 67) return 61;
+
+  // Snow (71–77, 85–86)
+  if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86))
+    return 71;
+
+  // Rain showers ⭐
+  if (code >= 80 && code <= 82) return 80;
+
+  // Thunderstorm
+  if (code === 95) return 95;
+  if (code === 96 || code === 99) return 96;
+
+  return -1;
 };
 
 /* =======================
-   SCORING
+   ICON + TEXT MAP
 ======================= */
+export const weatherMap: Record<number, WeatherInfo> = {
+  0: { icon: Sun, text: "Clear sky" },
+  1: { icon: Cloud, text: "Mainly clear" },
+  2: { icon: Cloud, text: "Partly cloudy" },
+  3: { icon: Cloud, text: "Overcast" },
 
+  45: { icon: CloudDrizzle, text: "Fog" },
+
+  51: { icon: CloudDrizzle, text: "Drizzle" },
+
+  61: { icon: CloudRain, text: "Rain" },
+
+  71: { icon: CloudSnow, text: "Snow" },
+
+  80: { icon: CloudRain, text: "Rain showers" },
+
+  95: { icon: CloudLightning, text: "Thunderstorm" },
+  96: { icon: CloudLightning, text: "Thunderstorm with hail" },
+};
+
+/* =======================
+   WEATHER INFO HELPER
+======================= */
+export const getWeatherInfo = (code?: number): WeatherInfo => {
+  const normalized = normalizeWeatherCode(code);
+
+  return (
+    weatherMap[normalized] ?? {
+      icon: Sun,
+      text: "Unknown",
+    }
+  );
+};
+
+/* =======================
+   SCORING SYSTEM
+======================= */
 const phaseScore: Record<DayPhase, number> = {
   night: -60,
   dusk: -30,
@@ -56,15 +102,14 @@ const weatherScore: Record<number, number> = {
   51: -20,
   61: -35,
   71: -10,
+  80: -40,
   95: -50,
   96: -55,
-  99: -55,
 };
 
 /* =======================
    MOONLIGHT TINT
 ======================= */
-
 const applyMoonlightTint = (
   h: number,
   s: number,
@@ -74,31 +119,39 @@ const applyMoonlightTint = (
   if (phase !== "night") return { h, s, l };
 
   return {
-    h: Math.min(h + 10, 240), // geser ke biru
-    s: Math.max(s - 15, 10), // lebih kalem
-    l: l - 5,                // lebih gelap
+    h: Math.min(h + 10, 240),
+    s: Math.max(s - 15, 10),
+    l: l - 5,
   };
 };
 
 /* =======================
    BACKGROUND GENERATOR
 ======================= */
-
 export const getBackgroundByWeather = (
   weatherCode?: number,
   phase: DayPhase = "day"
 ): BackgroundGradient => {
-  const baseHex =
-    baseWeatherColor[weatherCode ?? 0] ?? "#77b9e4";
+  const normalized = normalizeWeatherCode(weatherCode);
 
+  const baseHex =
+    baseWeatherColor[normalized] ?? "#77b9e4";
   const base = hexToHsl(baseHex);
 
-  const phaseValue = phaseScore[phase];
-  const weatherValue = weatherScore[weatherCode ?? -1] ?? 0;
-
-  const totalScore = phaseValue + weatherValue;
+  const totalScore =
+    phaseScore[phase] +
+    (weatherScore[normalized] ?? 0);
 
   let lightness = base.l + totalScore;
+
+  if (phase === "day") {
+    lightness += 5;
+  }
+
+  if (phase === "day" && [1, 2, 3].includes(normalized)) {
+    lightness = Math.min(lightness, 70);
+  }
+
   lightness = Math.max(12, Math.min(88, lightness));
 
   const tinted = applyMoonlightTint(
@@ -108,19 +161,12 @@ export const getBackgroundByWeather = (
     phase
   );
 
-  /* 🔍 DEBUG */
-  console.table({
-    phase,
-    weatherCode,
-    phaseValue,
-    weatherValue,
-    totalScore,
-    baseLightness: base.l,
-    finalLightness: tinted.l,
-  });
-
   return {
     from: hslToCss(tinted.h, tinted.s, tinted.l),
-    to: hslToCss(tinted.h, tinted.s, tinted.l - 12),
+    to: hslToCss(
+      tinted.h,
+      tinted.s,
+      Math.max(tinted.l - 12, 12)
+    ),
   };
 };
