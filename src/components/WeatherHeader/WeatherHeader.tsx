@@ -8,6 +8,10 @@ interface WeatherHeaderProps {
   selectedCity: City;
 }
 
+export const formatCityName = (name: string) => {
+  return name.split(",").slice(0, 3).join(", ");
+};
+
 export default function WeatherHeader({ weather, selectedCity }: WeatherHeaderProps) {
   const formattedDate = useFormattedDate();
   const IconComponent = weather.current_icon;
@@ -21,8 +25,10 @@ export default function WeatherHeader({ weather, selectedCity }: WeatherHeaderPr
           </h1>
 
           <p className="flex items-center gap-1 text-base mt-3 drop-shadow-xs">
-            {selectedCity.name}
-            <MapPin strokeWidth={1} className="w-4 h-4 text-white" />
+            <span className="truncate max-w-[220px]">
+              {formatCityName(selectedCity.name)}
+            </span>
+            <MapPin strokeWidth={1} className="w-4 h-4 text-white shrink-0" />
           </p>
 
           <div className="my-5">
