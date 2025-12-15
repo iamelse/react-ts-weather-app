@@ -1,5 +1,10 @@
 import type { LucideIcon } from "lucide-react";
 
+export interface CurrentWeather {
+  temp: number;
+  code: number;
+}
+
 export interface City {
   name: string;
   country?: string;

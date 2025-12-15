@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
 import { LocateIcon, Settings } from "lucide-react";
 import CityList from "./CityList";
 import FavoriteLocation from "./FavoriteLocation";
 import LocationActions from "./LocationActions";
 import type { City } from "../../types/weather";
-import { fetchCityWeather } from "../../api/weather";
+import { useCityWeather } from "../../hooks/useCityWeather";
 
 interface SidebarProps {
   menuOpen: boolean;
@@ -25,11 +24,7 @@ export default function Sidebar({
   selectedCity,
   handleSelect,
 }: SidebarProps) {
-  const [cities, setCities] = useState<City[]>(initialCities);
-
-  useEffect(() => {
-    Promise.all(initialCities.map(fetchCityWeather)).then(setCities);
-  }, []);
+  const { cities, loading, error } = useCityWeather(initialCities);
 
   return (
     <aside
@@ -55,6 +50,9 @@ export default function Sidebar({
             <LocateIcon strokeWidth={1} className="w-5 h-5 text-white" />
             <span className="text-white/90 text-sm">Other Locations</span>
           </div>
+
+          {loading && <p className="text-white/80 text-sm">Loading cities...</p>}
+          {error && <p className="text-red-400 text-sm">{error}</p>}
 
           <CityList cities={cities} handleSelect={handleSelect} />
         </div>
