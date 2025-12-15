@@ -1,10 +1,10 @@
 import type { City, HourlyItem, WeeklyItemType } from "../types/weather";
-import { getWeatherIcon } from "../utils/weather";
+import { getWeatherInfo } from "../utils/weather";
 
-export const fetchCityWeather = async (city: City) => {
+export const fetchCityWeather = async (city: City, baseUrl: string) => {
   try {
     const res = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${city.latitude}&longitude=${city.longitude}&current=temperature_2m,weather_code`
+      `${baseUrl}?latitude=${city.latitude}&longitude=${city.longitude}&current=temperature_2m,weather_code`
     );
     const data = await res.json();
     const current = data.current;
@@ -26,7 +26,7 @@ export const fetchCurrentWeather = async (lat: number, lon: number, baseUrl: str
   );
   const data = await res.json();
   const current = data.current;
-  const iconData = getWeatherIcon(current.weather_code);
+  const iconData = getWeatherInfo(current.weather_code);
 
   return {
     temp: current.temperature_2m,
@@ -52,7 +52,7 @@ export const fetchHourlyWeather = async (lat: number, lon: number, baseUrl: stri
     const timeDate = new Date(timeStr);
 
     if (timeDate >= now && timeDate <= new Date(now.getTime() + 24 * 60 * 60 * 1000)) {
-      const iconData = getWeatherIcon(data.hourly.weathercode[i]);
+      const iconData = getWeatherInfo(data.hourly.weathercode[i]);
       hourly.push({
         time: timeStr.split("T")[1].slice(0, 5),
         temp: data.hourly.temperature_2m[i],
@@ -75,7 +75,7 @@ export const fetchWeeklyWeather = async (lat: number, lon: number, baseUrl: stri
   const data = await res.json();
 
   return data.daily.time.map((day: string, idx: number) => {
-    const iconData = getWeatherIcon(data.daily.weathercode[idx]);
+    const iconData = getWeatherInfo(data.daily.weathercode[idx]);
     return {
       date: day,
       temp_max: data.daily.temperature_2m_max[idx],

@@ -4,18 +4,25 @@ import Sidebar from "./components/Sidebar/Sidebar";
 import WeatherHeader from "./components/WeatherHeader/WeatherHeader";
 import HourlyChart from "./components/HourlyChart/HourlyChart";
 import WeeklyForecast from "./components/WeeklyForecast/WeeklyForecast";
-import type { WeatherState } from "./types/weather";
+import type { WeatherState, City } from "./types/weather";
 import { getBackgroundByWeather } from "./utils/weather";
-import { fetchCurrentWeather, fetchHourlyWeather, fetchWeeklyWeather } from "./api/weather";
-import "./App.css";
+import { useDayPhase } from "./hooks/useDayPhase";
+import {
+  fetchCurrentWeather,
+  fetchHourlyWeather,
+  fetchWeeklyWeather,
+} from "./api/weather";
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [selectedCity, setSelectedCity] = useState<any | null>({
+
+  const [selectedCity, setSelectedCity] = useState<City>({
     name: "Cilacap",
-    latitude: -7.7197, 
-    longitude: 109.0142
+    country: "Indonesia",
+    latitude: -7.7197,
+    longitude: 109.0142,
   });
+
   const [weather, setWeather] = useState<WeatherState>({
     hourly: [],
     weekly: [],
@@ -27,101 +34,74 @@ export default function App() {
     sunrise: "N/A",
     sunset: "N/A",
   });
-  const [loading, setLoading] = useState(true);
-  const [hourlyLoaded, setHourlyLoaded] = useState(false);
-  const [weeklyLoaded, setWeeklyLoaded] = useState(false);
 
   const BASE_URL = import.meta.env.VITE_BASE_URL;
 
-  const getFormattedDate = () => {
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    const now = new Date();
-    return `${days[now.getDay()]}, ${now.getHours()}:${String(now.getMinutes()).padStart(2, "0")}`;
-  };
-
-  const handleSelect = (city: any) => {
-    setSelectedCity(city);
-    setWeather({
-      hourly: [],
-      weekly: [],
-      temp: 0,
-      feels_like: 0,
-      wind_speed: 0,
-      humidity: 0,
-      uv_index: 0,
-      sunrise: "N/A",
-      sunset: "N/A",
-    });
-    setLoading(true);
-    setMenuOpen(false);
-  };
+  /* =======================
+     FETCH WEATHER
+  ======================= */
 
   useEffect(() => {
-    if (!selectedCity) return;
     const { latitude, longitude } = selectedCity;
 
     fetchCurrentWeather(latitude, longitude, BASE_URL)
-      .then(data => setWeather(prev => ({ ...prev, ...data })))
-      .catch(err => console.error("Failed to fetch current weather:", err));
+      .then((data) => setWeather((prev) => ({ ...prev, ...data })));
 
-    setHourlyLoaded(false);
     fetchHourlyWeather(latitude, longitude, BASE_URL)
-      .then(hourly => setWeather(prev => ({ ...prev, hourly, wind_speed: hourly.length > 0 ? hourly[0].wind_speed : 0 })))
-      .finally(() => setHourlyLoaded(true))
-      .catch(err => console.error(err));
+      .then((hourly) => setWeather((prev) => ({ ...prev, hourly })));
 
-    setWeeklyLoaded(false);
     fetchWeeklyWeather(latitude, longitude, BASE_URL)
-      .then(weekly => setWeather(prev => ({ ...prev, weekly })))
-      .finally(() => setWeeklyLoaded(true))
-      .catch(err => console.error(err));
+      .then((weekly) => setWeather((prev) => ({ ...prev, weekly })));
   }, [selectedCity, BASE_URL]);
 
-  useEffect(() => {
-    if (hourlyLoaded && weeklyLoaded) setLoading(false);
-  }, [hourlyLoaded, weeklyLoaded]);
+  /* =======================
+     SIDEBAR HANDLER ✅
+  ======================= */
 
-  const bgGradient = getBackgroundByWeather(weather.current_code, weather.is_day);
+  const handleSelectCity = (city: City) => {
+    setSelectedCity(city);
+    setMenuOpen(false); // ⬅️ auto close
+  };
+
+  /* =======================
+     BACKGROUND (TIME + WEATHER)
+  ======================= */
+
+  const phase = useDayPhase();
+  const bgGradient = getBackgroundByWeather(weather.current_code, phase);
 
   return (
     <div
-      className="min-h-screen w-full text-white relative"
+      className="min-h-screen w-full text-white relative transition-colors duration-700"
       style={{
         background: `linear-gradient(to bottom, ${bgGradient.from}, ${bgGradient.to})`,
       }}
     >
-      <Sidebar menuOpen={menuOpen} handleSelect={handleSelect} selectedCity={selectedCity} />
+      {/* BACKDROP */}
+      <div
+        onClick={() => setMenuOpen(false)}
+        className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-10 transition-opacity duration-300
+        ${menuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+      />
 
-      {/* HAMBURGER */}
+      <Sidebar
+        menuOpen={menuOpen}
+        selectedCity={selectedCity}
+        handleSelect={handleSelectCity}
+      />
+
+      {/* MENU BUTTON */}
       <button
-        className={`fixed top-4 p-2 rounded-lg bg-white/10 backdrop-blur-sm z-50 transition-transform duration-300 ${
-          menuOpen ? "left-72 mx-3.5" : "left-4"
-        }`}
-        onClick={() => setMenuOpen(!menuOpen)}
+        className="fixed top-4 left-4 z-50 p-2 rounded-lg bg-white/10 backdrop-blur hover:bg-white/20 transition"
+        onClick={() => setMenuOpen(prev => !prev)}
       >
-        <Menu strokeWidth={1} className="w-5 h-5 text-white" />
+        <Menu className="w-5 h-5" />
       </button>
 
-      <div
-        className={`px-4 py-10 flex flex-col items-center transition-transform duration-300 ${
-          menuOpen ? "translate-x-72" : "translate-x-0"
-        }`}
-      >
-        {loading ? (
-          <p>Loading weather data...</p>
-        ) : weather ? (
-          <>
-            <WeatherHeader
-              weather={weather}
-              selectedCity={selectedCity}
-              getFormattedDate={getFormattedDate}
-            />
-            <HourlyChart hourly={weather.hourly} />
-            <WeeklyForecast weekly={weather.weekly} />
-          </>
-        ) : (
-          <p>Weather data not available</p>
-        )}
+      <div className="px-4 py-10 flex flex-col items-center relative z-0">
+        <WeatherHeader weather={weather} selectedCity={selectedCity} />
+        <HourlyChart hourly={weather.hourly} />
+        <WeeklyForecast weekly={weather.weekly} />
       </div>
     </div>
   );

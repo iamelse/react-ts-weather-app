@@ -1,17 +1,24 @@
-import { Icon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 export interface City {
   name: string;
-  country: string;
+  country?: string;
   latitude: number;
   longitude: number;
   current_code?: number;
   current_temp?: number;
 }
 
-export interface BackgroundGradient {
+export type BackgroundGradient = {
   from: string;
   to: string;
+};
+
+export type DayPhase = "night" | "dawn" | "day" | "dusk";
+
+export interface WeatherInfo {
+  icon: LucideIcon;
+  text: string;
 }
 
 export interface HourlyItem {
@@ -20,7 +27,7 @@ export interface HourlyItem {
   feels_like: number;
   humidity: number;
   wind_speed: number;
-  icon: typeof Icon; // <- pakai typeof
+  icon: LucideIcon;
   text?: string;
 }
 
@@ -29,7 +36,7 @@ export interface WeeklyItemType {
   temp_max: number;
   temp_min: number;
   precipitation: number;
-  icon?: typeof Icon; // <- pakai typeof
+  icon?: LucideIcon;
   text?: string;
   code?: number;
 }
@@ -44,13 +51,8 @@ export interface WeatherState {
   uv_index: number;
   sunrise: string;
   sunset: string;
-  current_icon?: typeof Icon; // <- pakai typeof
+  current_icon?: LucideIcon;
   current_text?: string;
   current_code?: number;
   is_day?: boolean;
-}
-
-export interface WeatherInfo {
-  icon: any;
-  text: string;
 }
