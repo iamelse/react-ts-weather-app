@@ -41,7 +41,7 @@ export default function CityList({
             <div className="grid grid-cols-[auto_auto] items-center gap-1.5">
               {weatherInfo && (
                 <img
-                  src={`/icons/animated/${weatherInfo.icon}.svg`}
+                  src={`/icons/animated/${weatherInfo.icon}`}
                   alt={weatherInfo.text}
                   className="w-7 h-7 opacity-90"
                   draggable={false}

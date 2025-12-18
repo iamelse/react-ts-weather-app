@@ -80,22 +80,34 @@ export const getWeatherInfo = (
 
   if (!info) {
     return {
-      icon: isDay ? "day" : "night",
+      icon: isDay ? "day.svg" : "night.svg",
       text: "Unknown",
     };
   }
 
-  // Swap day/night variant if exists
-  if (info.icon.includes("day") || info.icon.includes("night")) {
-    return {
-      ...info,
-      icon: isDay
-        ? info.icon.replace("night", "day")
-        : info.icon.replace("day", "night"),
-    };
-  }
+  // Ambil nama dasar: hapus ekstensi dan -day/-night
+  const baseName = info.icon
+    .replace(/(\.svg|(-day|-night))$/, "")
+    .replace(/-\d+$/, "");
 
-  return info;
+  // Daftar pengecualian: tidak pakai -day/-night
+  const exceptions = [
+                      "fog", "mist", "smoke",
+                      "severe-thunderstorm", "thunder", "tornado",
+                      "sleet", "scattered-thunderstorms", "haze",
+                      "hurricane"
+                    ];
+
+  const icon = exceptions.includes(baseName)
+    ? `${baseName}.svg`
+    : isDay
+    ? `${baseName}-day.svg`
+    : `${baseName}-night.svg`;
+
+  return {
+    ...info,
+    icon,
+  };
 };
 
 /* =======================

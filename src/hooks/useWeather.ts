@@ -43,6 +43,13 @@ export const useWeather = (
           fetchWeeklyWeather(city.latitude, city.longitude, baseUrl),
         ]);
 
+        // Debug: log semua response
+      console.log("=== Weather API Response ===");
+      console.log("Current:", current);
+      console.log("Hourly:", hourly);
+      console.log("Weekly:", weekly);
+
+
         if (!cancelled) {
           setWeather(prev => ({
             ...prev,

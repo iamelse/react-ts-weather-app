@@ -6,7 +6,7 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 export const fetchCurrentCityWeather = async (city: City, baseUrl: string = BASE_URL): Promise<CurrentWeather> => {
   const res = await fetch(
-    `${baseUrl}?latitude=${city.latitude}&longitude=${city.longitude}&current=temperature_2m,weather_code&timezone=Asia%2FBangkok`
+    `${baseUrl}?latitude=${city.latitude}&longitude=${city.longitude}&current=temperature_2m,weather_code,is_day&timezone=Asia%2FBangkok`
   );
 
   if (!res.ok) throw new Error("Failed to fetch weather");
@@ -25,7 +25,7 @@ export const fetchCityWeather = async (
 ): Promise<City> => {
   try {
     const res = await fetch(
-      `${baseUrl}?latitude=${city.latitude}&longitude=${city.longitude}&current=temperature_2m,weather_code&timezone=Asia%2FBangkok`
+      `${baseUrl}?latitude=${city.latitude}&longitude=${city.longitude}&current=temperature_2m,weather_code,is_day&timezone=Asia%2FBangkok`
     );
 
     const data = await res.json();
@@ -72,7 +72,7 @@ export const fetchHourlyWeather = async (
   baseUrl: string = BASE_URL
 ): Promise<HourlyItem[]> => {
   const res = await fetch(
-    `${baseUrl}?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weathercode&timezone=Asia%2FBangkok`
+    `${baseUrl}?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weathercode,is_day&timezone=Asia%2FBangkok`
   );
 
   const data = await res.json();
@@ -83,7 +83,10 @@ export const fetchHourlyWeather = async (
     const timeDate = new Date(data.hourly.time[i]);
 
     if (timeDate >= now && timeDate <= new Date(now.getTime() + 24 * 60 * 60 * 1000)) {
-      const iconData = getWeatherInfo(data.hourly.weathercode[i]);
+      const iconData = getWeatherInfo(
+        data.hourly.weathercode[i],
+        data.hourly.is_day[i] === 1 ? 1 : 0 // 1 = day, 0 = night
+      );
 
       hourly.push({
         time: data.hourly.time[i].split("T")[1].slice(0, 5),
@@ -91,6 +94,7 @@ export const fetchHourlyWeather = async (
         feels_like: data.hourly.apparent_temperature[i],
         humidity: data.hourly.relative_humidity_2m[i],
         wind_speed: data.hourly.wind_speed_10m[i],
+        is_day: data.hourly.is_day[i],
         icon: iconData.icon,
         text: iconData.text,
       });
@@ -112,7 +116,7 @@ export const fetchWeeklyWeather = async (
   const data = await res.json();
 
   return data.daily.time.map((day: string, idx: number) => {
-    const iconData = getWeatherInfo(data.daily.weathercode[idx]);
+    const iconData = getWeatherInfo(data.daily.weathercode[idx], 1);
 
     return {
       date: day,

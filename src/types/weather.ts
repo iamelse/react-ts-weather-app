@@ -32,6 +32,8 @@ export interface HourlyItem {
   icon: string;
   text?: string;
   code?: number;
+
+  is_day?: boolean;
 }
 
 /* =======================
@@ -46,6 +48,8 @@ export interface WeeklyItemType {
   icon?: string;
   text?: string;
   code?: number;
+
+  is_day?: boolean;
 }
 
 /* =======================
