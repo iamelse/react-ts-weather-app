@@ -3,14 +3,6 @@ import type {
   WeatherInfo,
   DayPhase,
 } from "../types/weather";
-import {
-  Sun,
-  Cloud,
-  CloudDrizzle,
-  CloudRain,
-  CloudSnow,
-  CloudLightning,
-} from "lucide-react";
 import { hexToHsl, hslToCss } from "./color";
 import { baseWeatherColor } from "./weatherColors";
 
@@ -36,7 +28,7 @@ const normalizeWeatherCode = (code?: number): number => {
   if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86))
     return 71;
 
-  // Rain showers ⭐
+  // Rain showers
   if (code >= 80 && code <= 82) return 80;
 
   // Thunderstorm
@@ -49,38 +41,61 @@ const normalizeWeatherCode = (code?: number): number => {
 /* =======================
    ICON + TEXT MAP
 ======================= */
+/**
+ * icon = nama file di /public/icons/animated (tanpa .svg)
+ */
 export const weatherMap: Record<number, WeatherInfo> = {
-  0: { icon: Sun, text: "Clear sky" },
-  1: { icon: Cloud, text: "Mainly clear" },
-  2: { icon: Cloud, text: "Partly cloudy" },
-  3: { icon: Cloud, text: "Overcast" },
+  0: { icon: "clear-day", text: "Clear sky" },
 
-  45: { icon: CloudDrizzle, text: "Fog" },
+  1: { icon: "partly-cloudy-day", text: "Mainly clear" },
+  2: { icon: "partly-cloudy-day", text: "Partly cloudy" },
+  3: { icon: "cloudy", text: "Overcast" },
 
-  51: { icon: CloudDrizzle, text: "Drizzle" },
+  45: { icon: "fog", text: "Fog" },
 
-  61: { icon: CloudRain, text: "Rain" },
+  51: { icon: "rainy-1", text: "Drizzle" },
 
-  71: { icon: CloudSnow, text: "Snow" },
+  61: { icon: "rainy-3", text: "Rain" },
 
-  80: { icon: CloudRain, text: "Rain showers" },
+  71: { icon: "snowy-3", text: "Snow" },
 
-  95: { icon: CloudLightning, text: "Thunderstorm" },
-  96: { icon: CloudLightning, text: "Thunderstorm with hail" },
+  80: { icon: "rainy-5", text: "Rain showers" },
+
+  95: { icon: "thunder", text: "Thunderstorm" },
+  96: {
+    icon: "severe-thunderstorm",
+    text: "Thunderstorm with hail",
+  },
 };
 
 /* =======================
    WEATHER INFO HELPER
 ======================= */
-export const getWeatherInfo = (code?: number): WeatherInfo => {
+export const getWeatherInfo = (
+  code?: number,
+  isDay: 0 | 1 = 1
+): WeatherInfo => {
   const normalized = normalizeWeatherCode(code);
+  const info = weatherMap[normalized];
 
-  return (
-    weatherMap[normalized] ?? {
-      icon: Sun,
+  if (!info) {
+    return {
+      icon: isDay ? "day" : "night",
       text: "Unknown",
-    }
-  );
+    };
+  }
+
+  // Swap day/night variant if exists
+  if (info.icon.includes("day") || info.icon.includes("night")) {
+    return {
+      ...info,
+      icon: isDay
+        ? info.icon.replace("night", "day")
+        : info.icon.replace("day", "night"),
+    };
+  }
+
+  return info;
 };
 
 /* =======================

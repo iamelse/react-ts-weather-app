@@ -6,7 +6,7 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 export const fetchCurrentCityWeather = async (city: City, baseUrl: string = BASE_URL): Promise<CurrentWeather> => {
   const res = await fetch(
-    `${baseUrl}?latitude=${city.latitude}&longitude=${city.longitude}&current=temperature_2m,weather_code`
+    `${baseUrl}?latitude=${city.latitude}&longitude=${city.longitude}&current=temperature_2m,weather_code&timezone=Asia%2FBangkok`
   );
 
   if (!res.ok) throw new Error("Failed to fetch weather");
@@ -25,7 +25,7 @@ export const fetchCityWeather = async (
 ): Promise<City> => {
   try {
     const res = await fetch(
-      `${baseUrl}?latitude=${city.latitude}&longitude=${city.longitude}&current=temperature_2m,weather_code`
+      `${baseUrl}?latitude=${city.latitude}&longitude=${city.longitude}&current=temperature_2m,weather_code&timezone=Asia%2FBangkok`
     );
 
     const data = await res.json();
@@ -48,7 +48,7 @@ export const fetchCurrentWeather = async (
   baseUrl: string = BASE_URL
 ) => {
   const res = await fetch(
-    `${baseUrl}?latitude=${lat}&longitude=${lon}&current=weather_code,temperature_2m,relative_humidity_2m,precipitation,is_day,apparent_temperature`
+    `${baseUrl}?latitude=${lat}&longitude=${lon}&current=weather_code,temperature_2m,relative_humidity_2m,precipitation,is_day,apparent_temperature&timezone=Asia%2FBangkok`
   );
 
   const data = await res.json();
@@ -72,7 +72,7 @@ export const fetchHourlyWeather = async (
   baseUrl: string = BASE_URL
 ): Promise<HourlyItem[]> => {
   const res = await fetch(
-    `${baseUrl}?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weathercode`
+    `${baseUrl}?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weathercode&timezone=Asia%2FBangkok`
   );
 
   const data = await res.json();
@@ -106,7 +106,7 @@ export const fetchWeeklyWeather = async (
   baseUrl: string = BASE_URL
 ): Promise<WeeklyItemType[]> => {
   const res = await fetch(
-    `${baseUrl}?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode&forecast_days=7&timezone=auto`
+    `${baseUrl}?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode&forecast_days=7&timezone=Asia%2FBangkok`
   );
 
   const data = await res.json();

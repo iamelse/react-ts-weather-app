@@ -1,9 +1,16 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { WeatherState } from "../types/weather";
 import type { City } from "../types/city";
-import { fetchCurrentWeather, fetchHourlyWeather, fetchWeeklyWeather } from "../api/weather";
+import {
+  fetchCurrentWeather,
+  fetchHourlyWeather,
+  fetchWeeklyWeather,
+} from "../api/weather";
 
-export const useWeather = (city: City, baseUrl: string) => {
+export const useWeather = (
+  city: City | undefined,
+  baseUrl: string
+) => {
   const [weather, setWeather] = useState<WeatherState>({
     hourly: [],
     weekly: [],
@@ -17,15 +24,18 @@ export const useWeather = (city: City, baseUrl: string) => {
     current_code: 0,
   });
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!city) return;
+
     let cancelled = false;
 
-    const loadWeather = async () => {
+    const load = async () => {
       setLoading(true);
       setError(null);
+
       try {
         const [current, hourly, weekly] = await Promise.all([
           fetchCurrentWeather(city.latitude, city.longitude, baseUrl),
@@ -41,16 +51,14 @@ export const useWeather = (city: City, baseUrl: string) => {
             weekly,
           }));
         }
-      } catch (err) {
+      } catch {
         if (!cancelled) setError("Failed to fetch weather");
-        console.error(err);
       } finally {
         if (!cancelled) setLoading(false);
       }
     };
 
-    loadWeather();
-
+    load();
     return () => {
       cancelled = true;
     };

@@ -6,4 +6,5 @@ export interface City {
   current_code?: number;
   current_temp?: number;
   is_favorite?: boolean;
+  is_day?: boolean;
 }

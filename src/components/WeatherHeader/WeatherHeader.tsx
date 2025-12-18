@@ -3,22 +3,33 @@ import { formatTempDisplay } from "../../utils";
 import type { WeatherState } from "../../types/weather";
 import type { City } from "../../types/city";
 import { useFormattedDate } from "../../hooks/useFormattedDate";
+import WeatherIcon from "../WeatherIcon";
 
 interface WeatherHeaderProps {
   weather: WeatherState;
-  selectedCity: City;
+  selectedCity?: City;
 }
 
 export const formatCityName = (name: string) => {
   return name.split(",").slice(0, 3).join(", ");
 };
 
-export default function WeatherHeader({ weather, selectedCity }: WeatherHeaderProps) {
+export default function WeatherHeader({
+  weather,
+  selectedCity,
+}: WeatherHeaderProps) {
   const formattedDate = useFormattedDate();
-  const IconComponent = weather.current_icon;
+
+  if (!selectedCity) {
+    return (
+      <div className="w-full max-w-md mt-16 text-white/70">
+        Loading location...
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full max-w-md mt-16">
+    <div className="w-full max-w-md mt-0">
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-6xl font-light drop-shadow-xs">
@@ -29,7 +40,10 @@ export default function WeatherHeader({ weather, selectedCity }: WeatherHeaderPr
             <span className="truncate max-w-[220px]">
               {formatCityName(selectedCity.name)}
             </span>
-            <MapPin strokeWidth={1} className="w-4 h-4 text-white shrink-0" />
+            <MapPin
+              strokeWidth={1}
+              className="w-4 h-4 text-white shrink-0"
+            />
           </p>
 
           <div className="my-5">
@@ -50,9 +64,11 @@ export default function WeatherHeader({ weather, selectedCity }: WeatherHeaderPr
         </div>
 
         <div className="flex items-center opacity-90 drop-shadow-xs">
-          {IconComponent && (
-            <IconComponent strokeWidth={1} className="w-20 h-20" />
-          )}
+          <WeatherIcon
+            name={weather.current_icon ?? "day"}
+            alt={weather.current_text ?? "Weather"}
+            size={120}
+          />
         </div>
       </div>
     </div>
