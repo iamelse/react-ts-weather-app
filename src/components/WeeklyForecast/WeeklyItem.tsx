@@ -31,7 +31,7 @@ export default function WeeklyItem({ data }: WeeklyItemProps) {
         </span>
 
         <img
-          src={`/icons/animated/${data.icon ?? "day"}.svg`}
+          src={`/icons/animated/${data.icon ?? "day.svg"}`}
           alt={data.text ?? "weather"}
           className="w-9 h-9 opacity-90 drop-shadow-xs"
           draggable={false}

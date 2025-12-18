@@ -4,6 +4,7 @@ import type { WeatherState } from "../../types/weather";
 import type { City } from "../../types/city";
 import { useFormattedDate } from "../../hooks/useFormattedDate";
 import WeatherIcon from "../WeatherIcon";
+import { getWeatherInfo } from "../../utils/weather";
 
 interface WeatherHeaderProps {
   weather: WeatherState;
@@ -27,6 +28,8 @@ export default function WeatherHeader({
       </div>
     );
   }
+
+  const weatherInfo = getWeatherInfo(weather.current_code, weather.is_day ? 1 : 0);
 
   return (
     <div className="w-full max-w-md mt-0">
@@ -65,8 +68,8 @@ export default function WeatherHeader({
 
         <div className="flex items-center opacity-90 drop-shadow-xs">
           <WeatherIcon
-            name={weather.current_icon ?? "day"}
-            alt={weather.current_text ?? "Weather"}
+            name={weatherInfo.icon}
+            alt={weatherInfo.text}
             size={120}
           />
         </div>

@@ -48,7 +48,7 @@ export default function FavoriteLocation({
         <div className="flex items-center gap-2 min-w-[72px] justify-end shrink-0">
           {weatherInfo && (
             <img
-              src={`/icons/animated/${weatherInfo.icon}.svg`}
+              src={`/icons/animated/${weatherInfo.icon}`}
               alt={weatherInfo.text}
               className="w-8 h-8 opacity-90"
               draggable={false}

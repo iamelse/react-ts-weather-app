@@ -29,9 +29,9 @@ export default function HourlyItem({
       </span>
 
       <img
-        src={`/icons/animated/${data.icon ?? "day"}.svg`}
+        src={`/icons/animated/${data.icon ?? "day.svg"}`}
         alt="weather"
-        className="w-9 h-9 opacity-90 drop-shadow-xs"
+        className="w-10 h-10 opacity-90 drop-shadow-xs"
         draggable={false}
       />
 
