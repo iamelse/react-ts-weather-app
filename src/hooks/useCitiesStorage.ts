@@ -12,41 +12,57 @@ const fallbackCity: City = {
 
 export function useCitiesStorage() {
   const [cities, setCities] = useState<City[]>(() => {
-    const stored = getStoredCities() ?? [];
-    return stored.length ? stored : [fallbackCity];
+    const stored = getStoredCities();
+    return stored && stored.length ? stored : [fallbackCity];
   });
 
-  // sync ke localStorage
+  const favoriteCity = cities.find(c => c.is_favorite);
+
+  const [activeCity, setActiveCity] = useState<City | undefined>(
+    favoriteCity ?? cities[0]
+  );
+
   useEffect(() => {
     saveCities(cities);
   }, [cities]);
 
-  const selectedCity =
-    cities.find((c) => c.is_favorite) ?? cities[0];
+  // kalau favorite berubah, sync active (saat pertama load)
+  useEffect(() => {
+    if (!activeCity && favoriteCity) {
+      setActiveCity(favoriteCity);
+    }
+  }, [favoriteCity, activeCity]);
 
-  /* ==========================
-     ACTIONS
-  ========================== */
+  /* ================= ACTIONS ================= */
 
-  const updateCities = (updated: City[]) => {
-    setCities(updated);
+  // klik city list → cuma ganti active
+  const selectCity = (city: City) => {
+    setActiveCity(city);
   };
 
-  const selectCity = (city: City) => {
-    setCities((prev) =>
-      prev.map((c) => ({
+  // set favorite (misalnya dari modal)
+  const setFavoriteCity = (city: City) => {
+    setCities(prev =>
+      prev.map(c => ({
         ...c,
         is_favorite:
           c.latitude === city.latitude &&
           c.longitude === city.longitude,
       }))
     );
+    setActiveCity(city);
+  };
+
+  const updateCities = (next: City[]) => {
+    setCities(next);
   };
 
   return {
     cities,
-    selectedCity,
-    updateCities,
+    activeCity,
+    favoriteCity,
     selectCity,
+    setFavoriteCity,
+    updateCities,
   };
 }

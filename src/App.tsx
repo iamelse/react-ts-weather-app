@@ -16,28 +16,13 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  /* ==========================
-     CITIES (HOOK)
-  ========================== */
-  const {
-    cities,
-    selectedCity,
-    updateCities,
-    selectCity,
-  } = useCitiesStorage();
+  const { cities, activeCity, updateCities, selectCity } = useCitiesStorage();
 
-  /* ==========================
-     WEATHER
-  ========================== */
   const BASE_URL = import.meta.env.VITE_BASE_URL;
-  const { weather, loading, error } =
-    useWeather(selectedCity, BASE_URL);
+  const { weather, loading, error } = useWeather(activeCity, BASE_URL);
 
   const phase = useDayPhase();
-  const bgGradient = getBackgroundByWeather(
-    weather.current_code,
-    phase
-  );
+  const bgGradient = getBackgroundByWeather(weather.current_code, phase);
 
   return (
     <div
@@ -46,66 +31,57 @@ export default function App() {
         background: `linear-gradient(to bottom, ${bgGradient.from}, ${bgGradient.to})`,
       }}
     >
-      {/* SIDEBAR */}
+      {/* ===== SIDEBAR ===== */}
       <Sidebar
         menuOpen={menuOpen}
         cities={cities}
-        selectedCity={selectedCity}
-        handleSelect={(city) => {
+        selectedCity={activeCity}
+        onSelectCity={(city) => {
           selectCity(city);
           setMenuOpen(false);
         }}
         onOpenModal={() => setIsModalOpen(true)}
+        bgGradient={bgGradient}
       />
 
-      {/* OVERLAY */}
+      {/* ===== OVERLAY ===== */}
       <div
         onClick={() => setMenuOpen(false)}
-        className={`fixed inset-0 z-20
-          bg-black/10 backdrop-blur-sm
-          transition-opacity duration-500
-          ${
-            menuOpen
-              ? "opacity-100 pointer-events-auto"
-              : "opacity-0 pointer-events-none"
-          }
+        className={`fixed inset-0 z-30
+          bg-black/20 backdrop-blur-sm
+          transition-opacity duration-500 ease-out
+          ${menuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
         `}
       />
 
-      {/* HAMBURGER */}
+      {/* ===== HAMBURGER BUTTON ===== */}
       <button
-        className={`fixed top-4 z-50 p-2 rounded-lg
-          bg-white/10 backdrop-blur
-          transition-all duration-500 ease-out
-          ${menuOpen ? "ms-4 left-72" : "left-4"}
+        onClick={() => setMenuOpen(v => !v)}
+        className={`fixed top-4 left-2 z-50 p-2 rounded-lg
+          bg-transparent hover:bg-white/10 hover:backdrop-blur
+          transition-transform duration-500 ease-out
+          ${menuOpen ? "translate-x-72" : "translate-x-0"}
         `}
-        onClick={() => setMenuOpen((v) => !v)}
       >
-        <Menu className="w-5 h-5" />
+        <Menu className="w-6 h-6" />
       </button>
 
-      {/* MAIN */}
-      <div className="px-4 py-10 flex flex-col items-center">
-        {loading && (
-          <p className="text-white/70">
-            Loading weather...
-          </p>
-        )}
-        {error && (
-          <p className="text-red-400">
-            {error}
-          </p>
-        )}
+      {/* ===== MAIN CONTENT ===== */}
+      <div
+        className={`pt-24 px-4 flex flex-col items-center relative z-10
+          transition-transform duration-500 ease-out
+          ${menuOpen ? "scale-[0.98]" : "scale-100"}
+        `}
+      >
+        {loading && <p className="text-white/70">Loading weather...</p>}
+        {error && <p className="text-red-400">{error}</p>}
 
-        <WeatherHeader
-          weather={weather}
-          selectedCity={selectedCity}
-        />
+        <WeatherHeader weather={weather} selectedCity={activeCity} />
         <HourlyChart hourly={weather.hourly} />
         <WeeklyForecast weekly={weather.weekly} />
       </div>
 
-      {/* MODAL */}
+      {/* ===== MODAL ===== */}
       <ManageLocationModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
