@@ -135,27 +135,36 @@ export default function ManageLocationModal({
         {/* SEARCH RESULTS */}
         {results.length > 0 && (
           <ul className="space-y-1 mb-6">
-            {results.map((loc, i) => (
-              <li
-                key={i}
-                className="flex items-center justify-between p-2 rounded-lg hover:bg-white/20 transition"
-              >
-                <span
-                  className="text-white text-sm truncate flex-1 mr-3"
-                  title={loc.display_name}
-                >
-                  {formatLocationName(loc.display_name)}
-                </span>
+            {results.map((loc, i) => {
+              const isSaved = cities.some(
+                (c) => c.latitude === +loc.lat && c.longitude === +loc.lon
+              );
 
-                <button
-                  onClick={() => addCity(loc)}
-                  className="flex items-center gap-1 text-xs px-2 py-1 rounded bg-white/20 hover:bg-white/30 transition"
+              return (
+                <li
+                  key={i}
+                  className="flex items-center justify-between p-2 rounded-lg hover:bg-white/20 transition"
                 >
-                  <Plus className="w-3 h-3" />
-                  Save
-                </button>
-              </li>
-            ))}
+                  <span
+                    className="text-white text-sm truncate flex-1 mr-3"
+                    title={loc.display_name}
+                  >
+                    {formatLocationName(loc.display_name)}
+                  </span>
+
+                  <button
+                    onClick={() => !isSaved && addCity(loc)}
+                    className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition
+                      ${isSaved ? "bg-white/20 cursor-not-allowed opacity-60" : "bg-white/20 hover:bg-white/30"}
+                    `}
+                    disabled={isSaved}
+                  >
+                    {!isSaved && <Plus className="w-3 h-3" />}
+                    {isSaved ? "Saved" : "Save"}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
 
