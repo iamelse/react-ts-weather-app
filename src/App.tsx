@@ -48,7 +48,7 @@ export default function App() {
       <div
         onClick={() => setMenuOpen(false)}
         className={`fixed inset-0 z-30
-          bg-black/20 backdrop-blur-sm
+          bg-black/30
           transition-opacity duration-500 ease-out
           ${menuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
         `}
@@ -58,7 +58,7 @@ export default function App() {
       <button
         onClick={() => setMenuOpen(v => !v)}
         className={`fixed top-4 left-2 z-50 p-2 rounded-lg
-          bg-transparent hover:bg-white/10 hover:backdrop-blur
+          bg-transparent hover:bg-white/30
           transition-transform duration-500 ease-out
           ${menuOpen ? "translate-x-72" : "translate-x-0"}
         `}

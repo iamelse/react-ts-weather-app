@@ -53,11 +53,11 @@ export const weatherMap: Record<number, WeatherInfo> = {
 
   45: { icon: "fog", text: "Fog" },
 
-  51: { icon: "rainy-1", text: "Drizzle" },
+  51: { icon: "rainy", text: "Drizzle" },
 
-  61: { icon: "rainy-3", text: "Rain" },
+  61: { icon: "rain", text: "Rain" },
 
-  71: { icon: "snowy-3", text: "Snow" },
+  71: { icon: "snow", text: "Snow" },
 
   80: { icon: "rainy-5", text: "Rain showers" },
 
@@ -95,7 +95,7 @@ export const getWeatherInfo = (
                       "fog", "mist", "smoke",
                       "severe-thunderstorm", "thunder", "tornado",
                       "sleet", "scattered-thunderstorms", "haze",
-                      "hurricane"
+                      "hurricane", "snowy"
                     ];
 
   const icon = exceptions.includes(baseName)
