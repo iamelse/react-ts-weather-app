@@ -89,7 +89,7 @@ export default function ManageLocationModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-6 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-center justify-center p-6 backdrop-blur-sm"
       style={{
         background: `linear-gradient(to bottom, ${bgGradient.from}88, ${bgGradient.to}88)`,
       }}

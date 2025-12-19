@@ -6,21 +6,24 @@ import WeatherHeader from "./components/WeatherHeader/WeatherHeader";
 import HourlyChart from "./components/HourlyChart/HourlyChart";
 import WeeklyForecast from "./components/WeeklyForecast/WeeklyForecast";
 import ManageLocationModal from "./components/Modal/ManageLocationModal";
+import FavoriteLocationInfoModal from "../src/components/Modal/FavoriteLocationInfoModal";
 
 import { getBackgroundByWeather } from "./utils/weather";
 import { useDayPhase } from "./hooks/useDayPhase";
 import { useWeather } from "./hooks/useWeather";
 import { useCitiesStorage } from "./hooks/useCitiesStorage";
+import type { City } from "./types/city";
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { cities, activeCity, updateCities, selectCity } = useCitiesStorage();
+  const [infoModalOpen, setInfoModalOpen] = useState(false);
+  const [infoCity, setInfoCity] = useState<City | null>(null);
 
+  const { cities, activeCity, updateCities, selectCity } = useCitiesStorage();
   const BASE_URL = import.meta.env.VITE_BASE_URL;
   const { weather, loading, error } = useWeather(activeCity, BASE_URL);
-
   const phase = useDayPhase();
   const bgGradient = getBackgroundByWeather(weather.current_code, phase);
 
@@ -31,7 +34,7 @@ export default function App() {
         background: `linear-gradient(to bottom, ${bgGradient.from}, ${bgGradient.to})`,
       }}
     >
-      {/* ===== SIDEBAR ===== */}
+      {/* SIDEBAR */}
       <Sidebar
         menuOpen={menuOpen}
         cities={cities}
@@ -41,10 +44,23 @@ export default function App() {
           setMenuOpen(false);
         }}
         onOpenModal={() => setIsModalOpen(true)}
+        onOpenInfoModal={(city) => {
+          setInfoCity(city);
+          setInfoModalOpen(true);
+        }}
         bgGradient={bgGradient}
       />
 
-      {/* ===== OVERLAY ===== */}
+      {infoModalOpen && infoCity && (
+        <FavoriteLocationInfoModal
+          isOpen={infoModalOpen}
+          onClose={() => setInfoModalOpen(false)}
+          favoriteCity={infoCity}
+          bgGradient={bgGradient}
+        />
+      )}
+
+      {/* OVERLAY */}
       <div
         onClick={() => setMenuOpen(false)}
         className={`fixed inset-0 z-30
@@ -54,9 +70,9 @@ export default function App() {
         `}
       />
 
-      {/* ===== HAMBURGER BUTTON ===== */}
+      {/* HAMBURGER BUTTON */}
       <button
-        onClick={() => setMenuOpen(v => !v)}
+        onClick={() => setMenuOpen((v) => !v)}
         className={`fixed top-4 left-2 z-50 p-2 rounded-lg
           bg-transparent hover:bg-white/30
           transition-transform duration-500 ease-out
@@ -66,7 +82,7 @@ export default function App() {
         <Menu className="w-6 h-6" />
       </button>
 
-      {/* ===== MAIN CONTENT ===== */}
+      {/* MAIN CONTENT */}
       <div
         className={`pt-24 px-4 flex flex-col items-center relative z-10
           transition-transform duration-500 ease-out
@@ -81,14 +97,25 @@ export default function App() {
         <WeeklyForecast weekly={weather.weekly} />
       </div>
 
-      {/* ===== MODAL ===== */}
-      <ManageLocationModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        bgGradient={bgGradient}
-        cities={cities}
-        onCitiesUpdate={updateCities}
-      />
+      {/* MODALS */}
+      {isModalOpen && (
+        <ManageLocationModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          bgGradient={bgGradient}
+          cities={cities}
+          onCitiesUpdate={updateCities}
+        />
+      )}
+
+      {infoModalOpen && infoCity && (
+        <FavoriteLocationInfoModal
+          isOpen={infoModalOpen}
+          onClose={() => setInfoModalOpen(false)}
+          favoriteCity={infoCity}
+          bgGradient={bgGradient} // Pastikan konsisten dengan tema app
+        />
+      )}
     </div>
   );
 }

@@ -6,32 +6,38 @@ import { useFavoriteWeather } from "../../hooks/useFavoriteWeather";
 interface FavoriteLocationProps {
   favoriteCity: City;
   onSelectCity: (city: City) => void;
+  onOpenInfoModal: (city: City) => void;
 }
 
 export default function FavoriteLocation({
   favoriteCity,
   onSelectCity,
+  onOpenInfoModal,
 }: FavoriteLocationProps) {
   const { weather, loading } = useFavoriteWeather(favoriteCity);
 
-  // Pakai is_day langsung dari API, tanpa konversi boolean
   const weatherInfo =
-    weather?.code !== undefined && weather.is_day !== undefined
-      ? getWeatherInfo(weather.code, weather.is_day) // 1 = day, 0 = night
+    weather?.code !== undefined
+      ? getWeatherInfo(weather.code, weather.is_day ? 1 : 0)
       : null;
-
-  // console.log("FavoriteLocation weatherInfo:", weatherInfo);
-  // console.log("FavoriteLocation weather:", weather);
 
   return (
     <div className="flex flex-col gap-2 mb-4">
-      {/* Header */}
+      {/* HEADER */}
       <div className="flex items-center justify-between w-full">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <Star strokeWidth={1} className="w-5 h-5 text-white" />
-          <span className="text-white/90 text-sm">Favorite Location</span>
+          <span className="text-white/90 text-sm leading-5 ms-1">
+            Favorite Location
+          </span>
         </div>
-        <button className="p-1 rounded hover:bg-white/20">
+        <button
+          onClick={(e) => {
+            e.stopPropagation(); // jangan trigger row click
+            onOpenInfoModal(favoriteCity);
+          }}
+          className="p-1 rounded hover:bg-white/20"
+        >
           <Info strokeWidth={1} className="w-5 h-5 text-white" />
         </button>
       </div>
@@ -41,12 +47,10 @@ export default function FavoriteLocation({
         onClick={() => onSelectCity(favoriteCity)}
         className="flex items-center justify-between w-full p-2 rounded-lg hover:bg-white/20 cursor-pointer"
       >
-        {/* City name */}
         <span className="text-white/90 text-sm ms-5 truncate flex-1">
           {favoriteCity.name}
         </span>
 
-        {/* Temp + icon */}
         <div className="flex items-center gap-2 min-w-[72px] justify-end shrink-0">
           {weatherInfo && (
             <img

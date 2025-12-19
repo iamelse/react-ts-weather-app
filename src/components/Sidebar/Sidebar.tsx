@@ -14,6 +14,7 @@ interface SidebarProps {
   selectedCity?: City;
   onSelectCity: (city: City) => void;
   onOpenModal: () => void;
+  onOpenInfoModal?: (city: City) => void;
   bgGradient: { from: string; to: string };
 }
 
@@ -23,6 +24,7 @@ export default function Sidebar({
   selectedCity,
   onSelectCity,
   onOpenModal,
+  onOpenInfoModal,
   bgGradient,
 }: SidebarProps) {
   const favoriteCity = useMemo(() => cities.find((c) => c.is_favorite), [cities]);
@@ -43,12 +45,16 @@ export default function Sidebar({
       <div className="p-4 flex flex-col h-full">
         {/* Scrollable content */}
         <div className="flex-1 flex flex-col overflow-y-auto">
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-end mb-6 mt-5 mx-1">
             <Settings className="w-5 h-5 text-white/80" />
           </div>
 
           {favoriteCity && (
-            <FavoriteLocation favoriteCity={favoriteCity} onSelectCity={onSelectCity} />
+            <FavoriteLocation
+              favoriteCity={favoriteCity}
+              onSelectCity={onSelectCity}
+              onOpenInfoModal={onOpenInfoModal!} // tanda seru karena optional
+            />
           )}
 
           <div className="flex items-center gap-2 my-4">
