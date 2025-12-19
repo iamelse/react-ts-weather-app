@@ -44,10 +44,10 @@ export const useWeather = (
         ]);
 
         // Debug: log semua response
-      console.log("=== Weather API Response ===");
-      console.log("Current:", current);
-      console.log("Hourly:", hourly);
-      console.log("Weekly:", weekly);
+        // console.log("Current:", current);
+        // console.log("=== Weather API Response ===");
+        // console.log("Hourly:", hourly);
+        // console.log("Weekly:", weekly);
 
 
         if (!cancelled) {
