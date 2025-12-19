@@ -1,7 +1,7 @@
 export interface CurrentWeather {
   temp: number;
   code: number;
-  is_day?: boolean;
+  is_day?: 0 | 1;
 }
 
 export type BackgroundGradient = {
@@ -33,7 +33,7 @@ export interface HourlyItem {
   text?: string;
   code?: number;
 
-  is_day?: boolean;
+  is_day?: 0 | 1;
 }
 
 /* =======================

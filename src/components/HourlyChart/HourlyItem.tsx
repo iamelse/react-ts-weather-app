@@ -1,4 +1,5 @@
 import { formatTempDisplay } from "../../utils";
+import { getWeatherInfo } from "../../utils/weather";
 
 interface HourlyItemProps {
   data: {
@@ -6,6 +7,8 @@ interface HourlyItemProps {
     temp: number;
     humidity: number;
     icon?: string;
+    code?: number;
+    is_day?: 0 | 1; // gunakan 0 = night, 1 = day
   };
   index: number;
   points: string;
@@ -22,14 +25,21 @@ export default function HourlyItem({
 }: HourlyItemProps) {
   const [_, y] = points.split(" ")[index].split(",");
 
+  // Pakai is_day dari API (0 = night, 1 = day)
+  const weatherInfo = getWeatherInfo(data.code, data.is_day ?? 1);
+
+  // console.log("HourlyItem data:", data);
+  // console.log("HourlyItem weatherInfo:", weatherInfo);
+
   return (
     <div style={{ width: itemWidth }} className="flex flex-col items-center">
       <span className="text-[0.65rem] text-white/70 mb-2 drop-shadow-xs">
         {data.time}
       </span>
 
+      {/* Gunakan icon dari weatherInfo */}
       <img
-        src={`/icons/animated/${data.icon ?? "day.svg"}`}
+        src={`/icons/meteocons/${weatherInfo.icon}`}
         alt="weather"
         className="w-10 h-10 opacity-90 drop-shadow-xs"
         draggable={false}

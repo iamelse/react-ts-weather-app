@@ -16,6 +16,7 @@ export const fetchCurrentCityWeather = async (city: City, baseUrl: string = BASE
   return {
     temp: Math.round(data.current.temperature_2m),
     code: data.current.weather_code,
+    is_day: data.current.is_day,
   };
 };
 
@@ -35,6 +36,7 @@ export const fetchCityWeather = async (
       ...city,
       current_temp: current.temperature_2m,
       current_code: current.weather_code,
+      is_day: current.is_day,
     };
   } catch (err) {
     console.error(`Failed to fetch weather for ${city.name}`, err);
@@ -97,6 +99,7 @@ export const fetchHourlyWeather = async (
         is_day: data.hourly.is_day[i],
         icon: iconData.icon,
         text: iconData.text,
+        code: data.hourly.weathercode[i],
       });
     }
   }

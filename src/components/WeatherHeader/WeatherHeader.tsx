@@ -31,6 +31,10 @@ export default function WeatherHeader({
 
   const weatherInfo = getWeatherInfo(weather.current_code, weather.is_day ? 1 : 0);
 
+  console.log(weather);
+  console.log(weatherInfo);
+
+
   return (
     <div className="w-full max-w-md mt-0">
       <div className="flex justify-between items-start">
@@ -70,7 +74,7 @@ export default function WeatherHeader({
           <WeatherIcon
             name={weatherInfo.icon}
             alt={weatherInfo.text}
-            size={120}
+            size={100}
           />
         </div>
       </div>

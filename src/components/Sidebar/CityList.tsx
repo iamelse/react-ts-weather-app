@@ -15,9 +15,10 @@ export default function CityList({
   return (
     <div className="flex flex-col ms-5 gap-2 mb-4 overflow-y-auto max-h-full">
       {cities.map((city) => {
+        // Pakai langsung is_day dari API (0 = night, 1 = day)
         const weatherInfo =
-          city.current_code !== undefined
-            ? getWeatherInfo(city.current_code, city.is_day ? 1 : 0)
+          city.current_code !== undefined && city.is_day !== undefined
+            ? getWeatherInfo(city.current_code, city.is_day)
             : null;
 
         const isSelected =
@@ -41,7 +42,7 @@ export default function CityList({
             <div className="grid grid-cols-[auto_auto] items-center gap-1.5">
               {weatherInfo && (
                 <img
-                  src={`/icons/animated/${weatherInfo.icon}`}
+                  src={`/icons/meteocons/${weatherInfo.icon}`}
                   alt={weatherInfo.text}
                   className="w-7 h-7 opacity-90"
                   draggable={false}
