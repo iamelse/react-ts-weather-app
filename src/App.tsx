@@ -6,7 +6,7 @@ import WeatherHeader from "./components/WeatherHeader/WeatherHeader";
 import HourlyChart from "./components/HourlyChart/HourlyChart";
 import WeeklyForecast from "./components/WeeklyForecast/WeeklyForecast";
 import ManageLocationModal from "./components/Modal/ManageLocationModal";
-import FavoriteLocationInfoModal from "../src/components/Modal/FavoriteLocationInfoModal";
+import FavoriteLocationInfoModal from "./components/Modal/FavoriteLocationInfoModal";
 
 import { getBackgroundByWeather } from "./utils/weather";
 import { useDayPhase } from "./hooks/useDayPhase";
@@ -17,7 +17,6 @@ import type { City } from "./types/city";
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
   const [infoModalOpen, setInfoModalOpen] = useState(false);
   const [infoCity, setInfoCity] = useState<City | null>(null);
 
@@ -29,7 +28,7 @@ export default function App() {
 
   return (
     <div
-      className="min-h-screen w-full text-white relative"
+      className="min-h-screen w-full text-white relative overflow-x-hidden"
       style={{
         background: `linear-gradient(to bottom, ${bgGradient.from}, ${bgGradient.to})`,
       }}
@@ -51,43 +50,30 @@ export default function App() {
         bgGradient={bgGradient}
       />
 
-      {infoModalOpen && infoCity && (
-        <FavoriteLocationInfoModal
-          isOpen={infoModalOpen}
-          onClose={() => setInfoModalOpen(false)}
-          favoriteCity={infoCity}
-          bgGradient={bgGradient}
-        />
-      )}
-
       {/* OVERLAY */}
       <div
         onClick={() => setMenuOpen(false)}
-        className={`fixed inset-0 z-30
-          bg-black/30
-          transition-opacity duration-500 ease-out
-          ${menuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
-        `}
+        className={`fixed inset-0 z-30 bg-black/30 transition-opacity duration-200 ease-out ${
+          menuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
       />
 
       {/* HAMBURGER BUTTON */}
       <button
         onClick={() => setMenuOpen((v) => !v)}
-        className={`fixed top-4 left-2 z-50 p-2 rounded-lg
-          bg-transparent hover:bg-white/30
-          transition-transform duration-500 ease-out
-          ${menuOpen ? "translate-x-72" : "translate-x-0"}
+        className={`fixed top-2 left-2 z-50 p-2 rounded-lg transition-transform duration-300 ease-out
+          ${menuOpen ? "hover:bg-black/30" : "hover:bg-white/30"}
         `}
+        style={{
+          transform: menuOpen ? "translateX(288px)" : "translateX(0)", // 72px width * 4 = 288px
+        }}
       >
-        <Menu className="w-6 h-6" />
+        <Menu className="w-6 h-6 text-white" />
       </button>
 
       {/* MAIN CONTENT */}
       <div
-        className={`pt-24 px-4 flex flex-col items-center relative z-10
-          transition-transform duration-500 ease-out
-          ${menuOpen ? "scale-[0.98]" : "scale-100"}
-        `}
+        className={`pt-24 px-4 flex flex-col items-center relative z-10 transition-transform duration-200 ease-out`}
       >
         {loading && <p className="text-white/70">Loading weather...</p>}
         {error && <p className="text-red-400">{error}</p>}
@@ -113,7 +99,7 @@ export default function App() {
           isOpen={infoModalOpen}
           onClose={() => setInfoModalOpen(false)}
           favoriteCity={infoCity}
-          bgGradient={bgGradient} // Pastikan konsisten dengan tema app
+          bgGradient={bgGradient}
         />
       )}
     </div>
