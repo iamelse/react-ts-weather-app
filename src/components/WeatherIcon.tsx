@@ -11,7 +11,7 @@ export default function WeatherIcon({
 }: WeatherIconProps) {
   return (
     <img
-      src={`/icons/animated/${name}`}
+      src={`/icons/meteocons/${name}`}
       alt={alt}
       width={size}
       height={size}
