@@ -32,28 +32,28 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`fixed left-0 top-0 h-full w-72 z-40 border-r border-white/10 transition-transform duration-500 ease-out ${
-        menuOpen ? "translate-x-0" : "-translate-x-full"
-      }`}
+      className="fixed top-0 left-0 h-full w-72 z-40 border-r border-white/10"
       style={{
+        transform: menuOpen ? "translateX(0)" : "translateX(-100%)",
+        transition: "transform 0.3s ease-out",
         background: menuOpen
           ? `linear-gradient(to bottom, ${bgGradient.from}, ${bgGradient.to}), rgba(0,0,0,0.5)`
           : "transparent",
         backgroundBlendMode: "overlay",
+        willChange: "transform",
       }}
     >
       <div className="p-4 flex flex-col h-full">
-        {/* Scrollable content */}
         <div className="flex-1 flex flex-col overflow-y-auto">
           <div className="flex justify-end mb-6 mt-5 mx-1">
             <Settings className="w-5 h-5 text-white/80" />
           </div>
 
-          {favoriteCity && (
+          {favoriteCity && onOpenInfoModal && (
             <FavoriteLocation
               favoriteCity={favoriteCity}
               onSelectCity={onSelectCity}
-              onOpenInfoModal={onOpenInfoModal!} // tanda seru karena optional
+              onOpenInfoModal={onOpenInfoModal}
             />
           )}
 
@@ -68,7 +68,6 @@ export default function Sidebar({
           <CityList cities={weatherCities} selectedCity={selectedCity} onSelectCity={onSelectCity} />
         </div>
 
-        {/* Actions tetap di bawah */}
         <LocationActions onOpenModal={onOpenModal} />
       </div>
     </aside>
