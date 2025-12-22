@@ -24,3 +24,8 @@ body::-webkit-scrollbar {
 .no-scrollbar::-webkit-scrollbar {
   display: none; /* Chrome, Safari */
 }
+
+/* Tagging untuk optimasi animasi SVG */
+.will-change-icon {
+  will-change: transform, opacity;
+}
