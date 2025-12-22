@@ -1,3 +1,4 @@
+import React from "react";
 import { formatTempDisplay } from "../../utils";
 
 interface WeeklyItemProps {
@@ -11,7 +12,8 @@ interface WeeklyItemProps {
   };
 }
 
-export default function WeeklyItem({ data }: WeeklyItemProps) {
+// Pakai React.memo agar tidak re-render kecuali props berubah
+const WeeklyItem = React.memo(function WeeklyItem({ data }: WeeklyItemProps) {
   const dayName = new Date(data.date).toLocaleDateString("en-US", {
     weekday: "long",
   });
@@ -33,10 +35,12 @@ export default function WeeklyItem({ data }: WeeklyItemProps) {
         <img
           src={`/icons/meteocons/${data.icon ?? "day.svg"}`}
           alt={data.text ?? "weather"}
-          className="w-9 h-9 opacity-90 drop-shadow-xs"
+          className="w-9 h-9 opacity-90 drop-shadow-xs will-change-icon"
           draggable={false}
         />
       </div>
     </div>
   );
-}
+});
+
+export default WeeklyItem;

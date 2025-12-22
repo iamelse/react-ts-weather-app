@@ -1,3 +1,4 @@
+import React from "react";
 import { formatTempDisplay } from "../../utils";
 import { getWeatherInfo } from "../../utils/weather";
 
@@ -8,7 +9,7 @@ interface HourlyItemProps {
     humidity: number;
     icon?: string;
     code?: number;
-    is_day?: 0 | 1; // gunakan 0 = night, 1 = day
+    is_day?: 0 | 1; // 0 = night, 1 = day
   };
   index: number;
   points: string;
@@ -16,20 +17,17 @@ interface HourlyItemProps {
   chartHeight: number;
 }
 
-export default function HourlyItem({
+const HourlyItem = React.memo(function HourlyItem({
   data,
   index,
   points,
   itemWidth,
   chartHeight,
 }: HourlyItemProps) {
-  const [_, y] = points.split(" ")[index].split(",");
+  // Hitung posisi y dari points
+  const [, y] = points.split(" ")[index].split(",");
 
-  // Pakai is_day dari API (0 = night, 1 = day)
   const weatherInfo = getWeatherInfo(data.code, data.is_day ?? 1);
-
-  // console.log("HourlyItem data:", data);
-  // console.log("HourlyItem weatherInfo:", weatherInfo);
 
   return (
     <div style={{ width: itemWidth }} className="flex flex-col items-center">
@@ -37,11 +35,11 @@ export default function HourlyItem({
         {data.time}
       </span>
 
-      {/* Gunakan icon dari weatherInfo */}
+      {/* Gunakan ikon dari weatherInfo + will-change */}
       <img
         src={`/icons/meteocons/${weatherInfo.icon}`}
         alt="weather"
-        className="w-10 h-10 opacity-90 drop-shadow-xs"
+        className="w-10 h-10 opacity-90 drop-shadow-xs will-change-icon"
         draggable={false}
       />
 
@@ -77,4 +75,6 @@ export default function HourlyItem({
       </span>
     </div>
   );
-}
+});
+
+export default HourlyItem;
