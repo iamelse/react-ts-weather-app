@@ -26,6 +26,16 @@ export default function App() {
   const phase = useDayPhase();
   const bgGradient = getBackgroundByWeather(weather.current_code, phase);
 
+  const toggleMenu = () => {
+    setMenuOpen((v) => !v);
+  };
+
+  const transformStyle = {
+    transform: menuOpen ? "translateX(288px)" : "translateX(0)",
+    transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)", // lebih smooth
+    willChange: "transform",
+  };
+
   return (
     <div
       className="min-h-screen w-full text-white relative overflow-x-hidden"
@@ -53,27 +63,24 @@ export default function App() {
       {/* OVERLAY */}
       <div
         onClick={() => setMenuOpen(false)}
-        className={`fixed inset-0 z-30 bg-black/30 transition-opacity duration-200 ease-out ${
+        className={`fixed inset-0 z-30 bg-black/30 transition-opacity duration-250 ease-out ${
           menuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
       />
 
       {/* HAMBURGER BUTTON */}
       <button
-        onClick={() => setMenuOpen((v) => !v)}
-        className={`fixed top-2 left-2 z-50 p-2 rounded-lg transition-transform duration-300 ease-out
-          ${menuOpen ? "hover:bg-black/30" : "hover:bg-white/30"}
-        `}
-        style={{
-          transform: menuOpen ? "translateX(288px)" : "translateX(0)", // 72px width * 4 = 288px
-        }}
+        onClick={toggleMenu}
+        className={`fixed top-2 left-2 z-50 p-2 rounded-lg transition-transform duration-350 hover:transition-transform ease-in-out`}
+        style={transformStyle}
       >
         <Menu className="w-6 h-6 text-white" />
       </button>
 
       {/* MAIN CONTENT */}
       <div
-        className={`pt-24 px-4 flex flex-col items-center relative z-10 transition-transform duration-200 ease-out`}
+        className="pt-24 px-4 flex flex-col items-center relative z-10"
+        style={transformStyle}
       >
         {loading && <p className="text-white/70">Loading weather...</p>}
         {error && <p className="text-red-400">{error}</p>}
