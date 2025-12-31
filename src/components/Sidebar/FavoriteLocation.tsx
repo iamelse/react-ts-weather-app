@@ -2,6 +2,7 @@ import { Star, Info } from "lucide-react";
 import type { City } from "../../types/city";
 import { getWeatherInfo } from "../../utils/weather";
 import { useFavoriteWeather } from "../../hooks/useFavoriteWeather";
+import { useSettings } from "../../context/SettingsContext";
 
 interface FavoriteLocationProps {
   favoriteCity: City;
@@ -14,7 +15,10 @@ export default function FavoriteLocation({
   onSelectCity,
   onOpenInfoModal,
 }: FavoriteLocationProps) {
+  const { unit } = useSettings();
   const { weather, loading } = useFavoriteWeather(favoriteCity);
+
+  const unitSymbol = unit === "fahrenheit" ? "°F" : "°C";
 
   const weatherInfo =
     weather?.code !== undefined
@@ -31,9 +35,10 @@ export default function FavoriteLocation({
             Favorite Location
           </span>
         </div>
+
         <button
           onClick={(e) => {
-            e.stopPropagation(); // jangan trigger row click
+            e.stopPropagation();
             onOpenInfoModal(favoriteCity);
           }}
           className="p-1 rounded hover:bg-white/20"
@@ -42,7 +47,7 @@ export default function FavoriteLocation({
         </button>
       </div>
 
-      {/* Favorite city row */}
+      {/* FAVORITE CITY ROW */}
       <div
         onClick={() => onSelectCity(favoriteCity)}
         className="flex items-center justify-between w-full p-2 rounded-lg hover:bg-white/20 cursor-pointer"
@@ -65,8 +70,8 @@ export default function FavoriteLocation({
             {loading
               ? "..."
               : weather?.temp !== undefined
-              ? Math.round(weather.temp) + "°"
-              : "--°"}
+              ? Math.round(weather.temp) + unitSymbol
+              : "--"}
           </span>
         </div>
       </div>

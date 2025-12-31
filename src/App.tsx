@@ -7,6 +7,7 @@ import HourlyChart from "./components/HourlyChart/HourlyChart";
 import WeeklyForecast from "./components/WeeklyForecast/WeeklyForecast";
 import ManageLocationModal from "./components/Modal/ManageLocationModal";
 import FavoriteLocationInfoModal from "./components/Modal/FavoriteLocationInfoModal";
+import SettingModal from "./components/Modal/SettingsModal";
 
 import { getBackgroundByWeather } from "./utils/weather";
 import { useDayPhase } from "./hooks/useDayPhase";
@@ -18,23 +19,18 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [infoModalOpen, setInfoModalOpen] = useState(false);
+  const [settingModalOpen, setSettingModalOpen] = useState(false);
   const [infoCity, setInfoCity] = useState<City | null>(null);
 
-  const { cities, activeCity, updateCities, selectCity } = useCitiesStorage();
+  const { cities, activeCity, updateCities, selectCity } =
+    useCitiesStorage();
+
   const BASE_URL = import.meta.env.VITE_BASE_URL;
   const { weather, loading, error } = useWeather(activeCity, BASE_URL);
   const phase = useDayPhase();
   const bgGradient = getBackgroundByWeather(weather.current_code, phase);
 
-  const toggleMenu = () => {
-    setMenuOpen((v) => !v);
-  };
-
-  const transformStyle = {
-    transform: menuOpen ? "translateX(288px)" : "translateX(0)",
-    transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)", // lebih smooth
-    willChange: "transform",
-  };
+  const toggleMenu = () => setMenuOpen((v) => !v);
 
   return (
     <div
@@ -43,7 +39,7 @@ export default function App() {
         background: `linear-gradient(to bottom, ${bgGradient.from}, ${bgGradient.to})`,
       }}
     >
-      {/* SIDEBAR */}
+      {/* ================= SIDEBAR ================= */}
       <Sidebar
         menuOpen={menuOpen}
         cities={cities}
@@ -53,6 +49,7 @@ export default function App() {
           setMenuOpen(false);
         }}
         onOpenModal={() => setIsModalOpen(true)}
+        onOpenSettingModal={() => setSettingModalOpen(true)}
         onOpenInfoModal={(city) => {
           setInfoCity(city);
           setInfoModalOpen(true);
@@ -60,37 +57,37 @@ export default function App() {
         bgGradient={bgGradient}
       />
 
-      {/* OVERLAY */}
+      {/* ================= OVERLAY ================= */}
       <div
         onClick={() => setMenuOpen(false)}
-        className={`fixed inset-0 z-30 bg-black/30 transition-opacity duration-250 ease-out ${
-          menuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-        }`}
+        className={`fixed inset-0 z-30 bg-black/30 transition-opacity duration-300
+          ${
+            menuOpen
+              ? "opacity-100 pointer-events-auto"
+              : "opacity-0 pointer-events-none"
+          }
+        `}
       />
 
-      {/* HAMBURGER BUTTON */}
+      {/* ================= HAMBURGER ================= */}
       <button
         onClick={toggleMenu}
-        className={`fixed top-2 left-2 z-50 p-2 rounded-lg transition-transform duration-350 hover:transition-transform ease-in-out`}
-        style={transformStyle}
+        className="fixed top-3 left-3 z-50 p-2 rounded-lg hover:bg-white/20"
       >
         <Menu className="w-6 h-6 text-white" />
       </button>
 
-      {/* MAIN CONTENT */}
-      <div
-        className="pt-24 px-4 flex flex-col items-center relative z-10"
-        style={transformStyle}
-      >
+      {/* ================= CONTENT (STATIC) ================= */}
+      <main className="pt-24 px-4 flex flex-col items-center relative z-10">
         {loading && <p className="text-white/70">Loading weather...</p>}
         {error && <p className="text-red-400">{error}</p>}
 
         <WeatherHeader weather={weather} selectedCity={activeCity} />
         <HourlyChart hourly={weather.hourly} />
         <WeeklyForecast weekly={weather.weekly} />
-      </div>
+      </main>
 
-      {/* MODALS */}
+      {/* ================= MODALS ================= */}
       {isModalOpen && (
         <ManageLocationModal
           isOpen={isModalOpen}
@@ -106,6 +103,14 @@ export default function App() {
           isOpen={infoModalOpen}
           onClose={() => setInfoModalOpen(false)}
           favoriteCity={infoCity}
+          bgGradient={bgGradient}
+        />
+      )}
+
+      {settingModalOpen && (
+        <SettingModal
+          isOpen={settingModalOpen}
+          onClose={() => setSettingModalOpen(false)}
           bgGradient={bgGradient}
         />
       )}

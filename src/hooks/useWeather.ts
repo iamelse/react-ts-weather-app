@@ -6,11 +6,14 @@ import {
   fetchHourlyWeather,
   fetchWeeklyWeather,
 } from "../api/weather";
+import { useSettings } from "../context/SettingsContext";
 
 export const useWeather = (
   city: City | undefined,
   baseUrl: string
 ) => {
+  const { unit } = useSettings();
+
   const [weather, setWeather] = useState<WeatherState>({
     hourly: [],
     weekly: [],
@@ -22,6 +25,7 @@ export const useWeather = (
     sunrise: "N/A",
     sunset: "N/A",
     current_code: 0,
+    is_day: true,
   });
 
   const [loading, setLoading] = useState(false);
@@ -32,44 +36,69 @@ export const useWeather = (
 
     let cancelled = false;
 
-    const load = async () => {
+    const loadWeather = async () => {
       setLoading(true);
       setError(null);
 
       try {
         const [current, hourly, weekly] = await Promise.all([
-          fetchCurrentWeather(city.latitude, city.longitude, baseUrl),
-          fetchHourlyWeather(city.latitude, city.longitude, baseUrl),
-          fetchWeeklyWeather(city.latitude, city.longitude, baseUrl),
+          fetchCurrentWeather(
+            city.latitude,
+            city.longitude,
+            baseUrl,
+            unit
+          ),
+          fetchHourlyWeather(
+            city.latitude,
+            city.longitude,
+            baseUrl,
+            unit
+          ),
+          fetchWeeklyWeather(
+            city.latitude,
+            city.longitude,
+            baseUrl,
+            unit
+          ),
         ]);
 
-        // Debug: log semua response
-        // console.log("Current:", current);
-        // console.log("=== Weather API Response ===");
-        // console.log("Hourly:", hourly);
-        // console.log("Weekly:", weekly);
-
-
         if (!cancelled) {
-          setWeather(prev => ({
-            ...prev,
-            ...current,
+          setWeather({
             hourly,
             weekly,
-          }));
+
+            // dari current weather
+            temp: current.temp,
+            feels_like: current.feels_like,
+            humidity: current.humidity,
+            current_code: current.current_code,
+
+            // belum ada di API → default aman
+            wind_speed: 0,
+            uv_index: 0,
+            sunrise: "N/A",
+            sunset: "N/A",
+
+            is_day: current.is_day,
+          });
         }
       } catch {
-        if (!cancelled) setError("Failed to fetch weather");
+        if (!cancelled) {
+          setError("Failed to fetch weather");
+        }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
-    load();
+    loadWeather();
+
     return () => {
       cancelled = true;
     };
-  }, [city, baseUrl]);
+  }, [city, baseUrl, unit]);
 
   return { weather, loading, error };
 };
