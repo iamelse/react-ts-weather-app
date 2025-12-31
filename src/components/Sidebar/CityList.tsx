@@ -1,6 +1,7 @@
 import React from "react";
 import type { City } from "../../types/city";
 import { getWeatherInfo } from "../../utils/weather";
+import { useSettings } from "../../context/SettingsContext";
 
 interface CityListProps {
   cities: City[];
@@ -8,7 +9,6 @@ interface CityListProps {
   onSelectCity: (city: City) => void;
 }
 
-// Component untuk tiap row, pakai React.memo
 const CityRow = React.memo(
   ({
     city,
@@ -19,14 +19,17 @@ const CityRow = React.memo(
     isSelected: boolean;
     onSelectCity: (city: City) => void;
   }) => {
+    const { unit } = useSettings();
+
     const weatherInfo =
       city.current_code !== undefined && city.is_day !== undefined
         ? getWeatherInfo(city.current_code, city.is_day)
         : null;
 
+    const unitSymbol = unit === "fahrenheit" ? "°F" : "°C";
+
     return (
       <div
-        key={`${city.latitude}-${city.longitude}`}
         className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-colors
           ${isSelected ? "bg-white/25" : "hover:bg-white/20"}
         `}
@@ -43,15 +46,15 @@ const CityRow = React.memo(
             <img
               src={`/icons/meteocons/${weatherInfo.icon}`}
               alt={weatherInfo.text}
-              className="w-7 h-7 opacity-90 will-change-icon"
+              className="w-7 h-7 opacity-90"
               draggable={false}
             />
           )}
 
           <span className="text-white/90 text-sm leading-none">
             {city.current_temp !== undefined
-              ? Math.round(city.current_temp) + "°"
-              : "--°"}
+              ? Math.round(city.current_temp) + unitSymbol
+              : "--"}
           </span>
         </div>
       </div>

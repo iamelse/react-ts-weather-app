@@ -31,9 +31,8 @@ export default function WeatherHeader({
 
   const weatherInfo = getWeatherInfo(weather.current_code, weather.is_day ? 1 : 0);
 
-  console.log(weather);
-  console.log(weatherInfo);
-
+  // console.log(weather);
+  // console.log(weatherInfo);
 
   return (
     <div className="w-full max-w-md mt-0">

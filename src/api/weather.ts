@@ -1,14 +1,36 @@
-import type { CurrentWeather, HourlyItem, WeeklyItemType } from "../types/weather";
+import type {
+  CurrentWeather,
+  HourlyItem,
+  WeeklyItemType,
+} from "../types/weather";
 import type { City } from "../types/city";
 import { getWeatherInfo } from "../utils/weather";
+import type { TempUnit } from "../context/SettingsContext";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
-export const fetchCurrentCityWeather = async (city: City, baseUrl: string = BASE_URL): Promise<CurrentWeather> => {
-  const res = await fetch(
-    `${baseUrl}?latitude=${city.latitude}&longitude=${city.longitude}&current=temperature_2m,weather_code,is_day&timezone=Asia%2FBangkok`
-  );
+/* ======================================================
+   Helper
+====================================================== */
+const tempUnitParam = (unit: TempUnit) =>
+  unit === "fahrenheit" ? "&temperature_unit=fahrenheit" : "";
 
+/* ======================================================
+   CURRENT CITY (Sidebar, Favorite)
+====================================================== */
+export const fetchCurrentCityWeather = async (
+  city: City,
+  baseUrl: string = BASE_URL,
+  unit: TempUnit = "celsius"
+): Promise<CurrentWeather> => {
+  const url =
+    `${baseUrl}?latitude=${city.latitude}` +
+    `&longitude=${city.longitude}` +
+    `&current=temperature_2m,weather_code,is_day` +
+    `&timezone=Asia%2FBangkok` +
+    tempUnitParam(unit);
+
+  const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch weather");
 
   const data = await res.json();
@@ -20,23 +42,30 @@ export const fetchCurrentCityWeather = async (city: City, baseUrl: string = BASE
   };
 };
 
+/* ======================================================
+   CITY WEATHER (City List)
+====================================================== */
 export const fetchCityWeather = async (
   city: City,
-  baseUrl: string = BASE_URL
+  baseUrl: string = BASE_URL,
+  unit: TempUnit = "celsius"
 ): Promise<City> => {
   try {
-    const res = await fetch(
-      `${baseUrl}?latitude=${city.latitude}&longitude=${city.longitude}&current=temperature_2m,weather_code,is_day&timezone=Asia%2FBangkok`
-    );
+    const url =
+      `${baseUrl}?latitude=${city.latitude}` +
+      `&longitude=${city.longitude}` +
+      `&current=temperature_2m,weather_code,is_day` +
+      `&timezone=Asia%2FBangkok` +
+      tempUnitParam(unit);
 
+    const res = await fetch(url);
     const data = await res.json();
-    const current = data.current;
 
     return {
       ...city,
-      current_temp: current.temperature_2m,
-      current_code: current.weather_code,
-      is_day: current.is_day,
+      current_temp: data.current.temperature_2m,
+      current_code: data.current.weather_code,
+      is_day: data.current.is_day,
     };
   } catch (err) {
     console.error(`Failed to fetch weather for ${city.name}`, err);
@@ -44,14 +73,24 @@ export const fetchCityWeather = async (
   }
 };
 
+/* ======================================================
+   CURRENT WEATHER (Main Header)
+====================================================== */
 export const fetchCurrentWeather = async (
   lat: number,
   lon: number,
-  baseUrl: string = BASE_URL
+  baseUrl: string = BASE_URL,
+  unit: TempUnit = "celsius"
 ) => {
-  const res = await fetch(
-    `${baseUrl}?latitude=${lat}&longitude=${lon}&current=weather_code,temperature_2m,relative_humidity_2m,precipitation,is_day,apparent_temperature&timezone=Asia%2FBangkok`
-  );
+  const url =
+    `${baseUrl}?latitude=${lat}` +
+    `&longitude=${lon}` +
+    `&current=weather_code,temperature_2m,relative_humidity_2m,precipitation,is_day,apparent_temperature` +
+    `&timezone=Asia%2FBangkok` +
+    tempUnitParam(unit);
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch current weather");
 
   const data = await res.json();
   const current = data.current;
@@ -68,14 +107,24 @@ export const fetchCurrentWeather = async (
   };
 };
 
+/* ======================================================
+   HOURLY WEATHER
+====================================================== */
 export const fetchHourlyWeather = async (
   lat: number,
   lon: number,
-  baseUrl: string = BASE_URL
+  baseUrl: string = BASE_URL,
+  unit: TempUnit = "celsius"
 ): Promise<HourlyItem[]> => {
-  const res = await fetch(
-    `${baseUrl}?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weathercode,is_day&timezone=Asia%2FBangkok`
-  );
+  const url =
+    `${baseUrl}?latitude=${lat}` +
+    `&longitude=${lon}` +
+    `&hourly=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weathercode,is_day` +
+    `&timezone=Asia%2FBangkok` +
+    tempUnitParam(unit);
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch hourly weather");
 
   const data = await res.json();
   const now = new Date();
@@ -87,7 +136,7 @@ export const fetchHourlyWeather = async (
     if (timeDate >= now && timeDate <= new Date(now.getTime() + 24 * 60 * 60 * 1000)) {
       const iconData = getWeatherInfo(
         data.hourly.weathercode[i],
-        data.hourly.is_day[i] === 1 ? 1 : 0 // 1 = day, 0 = night
+        data.hourly.is_day[i] === 1 ? 1 : 0
       );
 
       hourly.push({
@@ -107,14 +156,25 @@ export const fetchHourlyWeather = async (
   return hourly;
 };
 
+/* ======================================================
+   WEEKLY WEATHER
+====================================================== */
 export const fetchWeeklyWeather = async (
   lat: number,
   lon: number,
-  baseUrl: string = BASE_URL
+  baseUrl: string = BASE_URL,
+  unit: TempUnit = "celsius"
 ): Promise<WeeklyItemType[]> => {
-  const res = await fetch(
-    `${baseUrl}?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode&forecast_days=7&timezone=Asia%2FBangkok`
-  );
+  const url =
+    `${baseUrl}?latitude=${lat}` +
+    `&longitude=${lon}` +
+    `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode` +
+    `&forecast_days=7` +
+    `&timezone=Asia%2FBangkok` +
+    tempUnitParam(unit);
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch weekly weather");
 
   const data = await res.json();
 
