@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { City } from "../types/city";
 import { getStoredCities, saveCities } from "../utils/cityStorage";
 
@@ -10,40 +10,48 @@ const fallbackCity: City = {
   is_favorite: true,
 };
 
-export function useCitiesStorage() {
+export function useCitiesStorage(detectedCity?: City | null) {
   const [cities, setCities] = useState<City[]>(() => {
     const stored = getStoredCities();
     return stored && stored.length ? stored : [fallbackCity];
   });
 
-  const favoriteCity = cities.find(c => c.is_favorite);
+  const initialized = useRef(false);
 
-  const [activeCity, setActiveCity] = useState<City | undefined>(
-    favoriteCity ?? cities[0]
+  useEffect(() => {
+    if (initialized.current) return;
+    const stored = getStoredCities();
+    if (stored && stored.length > 0) {
+      initialized.current = true;
+      return;
+    }
+    if (!detectedCity) return;
+
+    initialized.current = true;
+    setTimeout(() => setCities([detectedCity]), 0);
+  }, [detectedCity]);
+
+  const favoriteCity = useMemo(
+    () => cities.find((c) => c.is_favorite),
+    [cities]
   );
 
-  useEffect(() => {
-    saveCities(cities);
-  }, [cities]);
+  const [activeCity, setActiveCity] = useState<City | undefined>(
+    () => favoriteCity ?? cities[0]
+  );
 
-  // kalau favorite berubah, sync active (saat pertama load)
-  useEffect(() => {
-    if (!activeCity && favoriteCity) {
-      setActiveCity(favoriteCity);
-    }
-  }, [favoriteCity, activeCity]);
+  const persist = (next: City[]) => {
+    saveCities(next);
+    setCities(next);
+  };
 
-  /* ================= ACTIONS ================= */
-
-  // klik city list → cuma ganti active
   const selectCity = (city: City) => {
     setActiveCity(city);
   };
 
-  // set favorite (misalnya dari modal)
   const setFavoriteCity = (city: City) => {
-    setCities(prev =>
-      prev.map(c => ({
+    persist(
+      cities.map((c) => ({
         ...c,
         is_favorite:
           c.latitude === city.latitude &&
@@ -54,7 +62,7 @@ export function useCitiesStorage() {
   };
 
   const updateCities = (next: City[]) => {
-    setCities(next);
+    persist(next);
   };
 
   return {

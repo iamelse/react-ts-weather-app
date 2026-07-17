@@ -21,14 +21,10 @@ export function useLocationSearch(query: string) {
       setError(null);
 
       try {
-        const data = await fetchLocations(query);
+        const data = await fetchLocations(query, controller.signal);
         setResults(data);
       } catch (err) {
-        if (
-          err instanceof DOMException &&
-          err.name === "AbortError"
-        )
-          return;
+        if (err instanceof DOMException && err.name === "AbortError") return;
 
         console.error(err);
         setError("Failed to search locations");

@@ -11,50 +11,42 @@ export type BackgroundGradient = {
 
 export type DayPhase = "night" | "dawn" | "day" | "dusk";
 
-/* =======================
-   WEATHER INFO
-======================= */
 export interface WeatherInfo {
   icon: string;
   text: string;
 }
 
-/* =======================
-   HOURLY
-======================= */
 export interface HourlyItem {
   time: string;
   temp: number;
   feels_like: number;
   humidity: number;
   wind_speed: number;
-
+  precip_prob?: number;
   icon: string;
   text?: string;
   code?: number;
-
   is_day?: 0 | 1;
 }
 
-/* =======================
-   WEEKLY
-======================= */
 export interface WeeklyItemType {
   date: string;
   temp_max: number;
   temp_min: number;
   precipitation: number;
-
   icon?: string;
   text?: string;
   code?: number;
-
-  is_day?: boolean;
+  is_day?: 0 | 1;
 }
 
-/* =======================
-   WEATHER STATE
-======================= */
+export interface AQIData {
+  aqi: number;
+  level: string;
+  pm2_5: number;
+  pm10: number;
+}
+
 export interface WeatherState {
   hourly: HourlyItem[];
   weekly: WeeklyItemType[];
@@ -62,6 +54,7 @@ export interface WeatherState {
   temp: number;
   feels_like: number;
   wind_speed: number;
+  wind_direction: number;
   humidity: number;
   uv_index: number;
 
@@ -71,5 +64,7 @@ export interface WeatherState {
   current_icon?: string;
   current_text?: string;
   current_code?: number;
-  is_day?: boolean;
+  is_day?: 0 | 1;
+
+  aqi?: AQIData;
 }

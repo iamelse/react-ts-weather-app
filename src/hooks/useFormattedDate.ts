@@ -1,30 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 type Options = {
   withSeconds?: boolean;
 };
 
 export const useFormattedDate = (options?: Options) => {
-  const days = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-  ];
-
-  const format = () => {
+  const format = useCallback(() => {
     const now = new Date();
-    const hh = now.getHours().toString().padStart(2, "0");
-    const mm = now.getMinutes().toString().padStart(2, "0");
-    const ss = now.getSeconds().toString().padStart(2, "0");
+    const time = now.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: options?.withSeconds ? "2-digit" : undefined,
+      hour12: false,
+    });
 
-    return options?.withSeconds
-      ? `${days[now.getDay()]}, ${hh}:${mm}:${ss}`
-      : `${days[now.getDay()]}, ${hh}:${mm}`;
-  };
+    return `${now.toLocaleDateString("en-US", { weekday: "long" })}, ${time}`;
+  }, [options?.withSeconds]);
 
   const [formattedDate, setFormattedDate] = useState<string>(format);
 
@@ -35,7 +26,7 @@ export const useFormattedDate = (options?: Options) => {
     );
 
     return () => clearInterval(interval);
-  }, [options?.withSeconds]);
+  }, [options?.withSeconds, format]);
 
   return formattedDate;
 };

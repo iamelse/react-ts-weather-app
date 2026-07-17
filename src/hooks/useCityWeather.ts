@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { City } from "../types/city";
 import { fetchCityWeather } from "../api/weather";
-import { useSettings } from "../context/SettingsContext";
+import { useSettings } from "./useSettings";
 
 interface UseCityWeatherResult {
   cities: City[];

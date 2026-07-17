@@ -1,21 +1,21 @@
 import { useState } from "react";
 import type { City } from "../../types/city";
 import {
-  X,
   Search,
   Star,
   Trash2,
   Plus,
+  MapPin,
+  LocateFixed,
+  Loader2,
 } from "lucide-react";
 
+import Modal from "./Modal";
+import Skeleton from "../Skeleton/Skeleton";
 import { useLocationSearch } from "../../hooks/useLocationSearch";
+import { useAutoDetectLocation } from "../../hooks/useAutoDetectLocation";
 import { formatLocationName } from "../../utils/location";
-
-interface Location {
-  display_name: string;
-  lat: string;
-  lon: string;
-}
+import type { Location } from "../../types/location";
 
 interface ModalProps {
   isOpen: boolean;
@@ -34,10 +34,7 @@ export default function ManageLocationModal({
 }: ModalProps) {
   const [query, setQuery] = useState("");
   const { results, loading } = useLocationSearch(query);
-
-  /* ==========================
-     ACTIONS
-  ========================== */
+  const { loading: gpsLoading, error: gpsError, detect } = useAutoDetectLocation();
 
   const addCity = (loc: Location) => {
     if (
@@ -59,6 +56,7 @@ export default function ManageLocationModal({
         is_favorite: cities.length === 0,
       },
     ]);
+    setQuery("");
   };
 
   const removeCity = (lat: number, lon: number) => {
@@ -85,146 +83,161 @@ export default function ManageLocationModal({
     );
   };
 
-  if (!isOpen) return null;
+  const handleDetectLocation = async () => {
+    const loc = await detect();
+    if (loc) addCity(loc);
+  };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-6 backdrop-blur-sm"
-      style={{
-        background: `linear-gradient(to bottom, ${bgGradient.from}88, ${bgGradient.to}88)`,
-      }}
-    >
-      <div className="relative w-full max-w-2xl rounded-2xl p-6 bg-white/10 border border-white/30 backdrop-blur-sm shadow">
-        {/* CLOSE */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-lg hover:bg-white/20 transition"
-          aria-label="Close modal"
-        >
-          <X className="w-5 h-5 text-white" />
-        </button>
-
-        <h2 className="text-2xl font-semibold text-white mb-6">
+    <Modal isOpen={isOpen} onClose={onClose} bgGradient={bgGradient} className="max-w-lg">
+      <div className="p-4 sm:p-5">
+        <h2 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">
           Manage Locations
         </h2>
 
         {/* SEARCH */}
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
+        <div className="relative mb-3">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" strokeWidth={1.5} />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search city, region, or place..."
-            className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/10 text-white border border-white/30 placeholder-white/50 focus:outline-none focus:ring-1 focus:ring-white/40"
+            placeholder="Search city..."
+            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white/10 text-white text-sm border border-white/10 placeholder-white/40 focus:outline-none focus:border-white/25 transition"
           />
         </div>
 
+        {/* AUTO DETECT */}
+        <button
+          onClick={handleDetectLocation}
+          disabled={gpsLoading}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white/80 hover:text-white text-sm font-medium transition mb-3 disabled:opacity-50"
+        >
+          {gpsLoading ? (
+            <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} />
+          ) : (
+            <LocateFixed className="w-4 h-4" strokeWidth={1.5} />
+          )}
+          {gpsLoading ? "Detecting..." : "Use My Location"}
+        </button>
+
+        {gpsError && (
+          <p className="text-red-400 text-xs mb-3">{gpsError}</p>
+        )}
+
         {/* STATES */}
         {loading && (
-          <p className="text-white/70 text-sm mb-3">
-            Searching locations…
-          </p>
+          <div className="space-y-2 mb-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between p-2.5 rounded-xl">
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="h-7 w-14 rounded-lg" />
+              </div>
+            ))}
+          </div>
         )}
 
         {!loading && query && results.length === 0 && (
-          <p className="text-white/50 text-sm mb-3">
-            No results found.
-          </p>
+          <p className="text-white/40 text-xs mb-4">No results found.</p>
         )}
 
         {/* SEARCH RESULTS */}
         {results.length > 0 && (
-          <ul className="space-y-1 mb-6">
+          <div className="mb-5 space-y-0.5">
+            <div className="text-[11px] font-medium text-white/40 uppercase tracking-wider mb-1.5">
+              Results
+            </div>
             {results.map((loc, i) => {
               const isSaved = cities.some(
                 (c) => c.latitude === +loc.lat && c.longitude === +loc.lon
               );
 
               return (
-                <li
+                <div
                   key={i}
-                  className="flex items-center justify-between p-2 rounded-lg hover:bg-white/20 transition"
+                  className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/10 transition"
                 >
-                  <span
-                    className="text-white text-sm truncate flex-1 mr-3"
-                    title={loc.display_name}
-                  >
-                    {formatLocationName(loc.display_name)}
-                  </span>
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-2">
+                    <MapPin className="w-3.5 h-3.5 text-white/30 shrink-0" strokeWidth={1.5} />
+                    <span className="text-sm text-white/80 truncate" title={loc.display_name}>
+                      {formatLocationName(loc.display_name)}
+                    </span>
+                  </div>
 
                   <button
                     onClick={() => !isSaved && addCity(loc)}
-                    className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition
-                      ${isSaved ? "bg-white/20 cursor-not-allowed opacity-60" : "bg-white/20 hover:bg-white/30"}
-                    `}
                     disabled={isSaved}
+                    className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg font-medium shrink-0 transition
+                      ${isSaved
+                        ? "bg-white/10 text-white/40 cursor-not-allowed"
+                        : "bg-white/15 text-white/80 hover:bg-white/25"
+                      }
+                    `}
                   >
-                    {!isSaved && <Plus className="w-3 h-3" />}
-                    {isSaved ? "Saved" : "Save"}
+                    {isSaved ? (
+                      "Saved"
+                    ) : (
+                      <>
+                        <Plus className="w-3 h-3" strokeWidth={2.5} />
+                        Add
+                      </>
+                    )}
                   </button>
-                </li>
+                </div>
               );
             })}
-          </ul>
+          </div>
         )}
 
         {/* SAVED LOCATIONS */}
-        <h3 className="text-white/80 text-sm mb-2">
+        <div className="text-[11px] font-medium text-white/40 uppercase tracking-wider mb-1.5">
           Saved Locations
-        </h3>
+        </div>
 
         {cities.length === 0 ? (
-          <p className="text-white/50 text-sm">
-            No saved locations yet.
-          </p>
+          <p className="text-white/40 text-xs">No saved locations yet.</p>
         ) : (
-          <ul className="space-y-2 max-h-60 overflow-auto pr-1">
+          <div className="space-y-1 max-h-52 overflow-y-auto pr-1 sidebar-scroll">
             {cities.map((city) => (
-              <li
+              <div
                 key={`${city.latitude}-${city.longitude}`}
-                className="flex items-center justify-between p-2 rounded-lg bg-white/10 hover:bg-white/15 transition"
+                className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition"
               >
                 <span
-                  className="text-white text-sm truncate flex-1"
+                  className="text-sm text-white/80 truncate flex-1 min-w-0 mr-2"
                   title={city.name}
                 >
                   {formatLocationName(city.name)}
                 </span>
 
-                <div className="flex items-center gap-3 shrink-0">
+                <div className="flex items-center gap-1 shrink-0">
                   <button
-                    onClick={() =>
-                      setFavorite(
-                        city.latitude,
-                        city.longitude
-                      )
-                    }
+                    onClick={() => setFavorite(city.latitude, city.longitude)}
+                    className="p-1.5 rounded-lg hover:bg-white/15 transition"
+                    title="Set as favorite"
                   >
                     <Star
                       className={`w-4 h-4 transition ${
                         city.is_favorite
                           ? "text-yellow-400 fill-yellow-400"
-                          : "text-white/40 hover:text-white/70"
+                          : "text-white/30 hover:text-white/60"
                       }`}
+                      strokeWidth={1.5}
                     />
                   </button>
 
                   <button
-                    onClick={() =>
-                      removeCity(
-                        city.latitude,
-                        city.longitude
-                      )
-                    }
+                    onClick={() => removeCity(city.latitude, city.longitude)}
+                    className="p-1.5 rounded-lg hover:bg-white/15 transition"
+                    title="Remove"
                   >
-                    <Trash2 className="w-4 h-4 text-red-400 hover:text-red-300 transition" />
+                    <Trash2 className="w-4 h-4 text-red-400/70 hover:text-red-400 transition" strokeWidth={1.5} />
                   </button>
                 </div>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </div>
-    </div>
+    </Modal>
   );
 }

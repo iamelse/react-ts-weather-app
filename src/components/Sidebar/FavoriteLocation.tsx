@@ -1,82 +1,60 @@
-import { Star, Info } from "lucide-react";
 import type { City } from "../../types/city";
 import { getWeatherInfo } from "../../utils/weather";
 import { useFavoriteWeather } from "../../hooks/useFavoriteWeather";
-import { useSettings } from "../../context/SettingsContext";
+import { useSettings } from "../../hooks/useSettings";
+import FavoriteLocationSkeleton from "./FavoriteLocationSkeleton";
 
 interface FavoriteLocationProps {
   favoriteCity: City;
   onSelectCity: (city: City) => void;
-  onOpenInfoModal: (city: City) => void;
 }
 
 export default function FavoriteLocation({
   favoriteCity,
   onSelectCity,
-  onOpenInfoModal,
 }: FavoriteLocationProps) {
   const { unit } = useSettings();
   const { weather, loading } = useFavoriteWeather(favoriteCity);
 
-  const unitSymbol = unit === "fahrenheit" ? "°F" : "°C";
+  if (loading) return <FavoriteLocationSkeleton />;
 
+  const unitSymbol = unit === "fahrenheit" ? "°F" : "°C";
   const weatherInfo =
     weather?.code !== undefined
-      ? getWeatherInfo(weather.code, weather.is_day ? 1 : 0)
+      ? getWeatherInfo(weather.code, weather.is_day ?? 1)
       : null;
 
   return (
-    <div className="flex flex-col gap-2 mb-4">
-      {/* HEADER */}
-      <div className="flex items-center justify-between w-full">
-        <div className="flex items-center gap-1">
-          <Star strokeWidth={1} className="w-5 h-5 text-white" />
-          <span className="text-white/90 text-sm leading-5 ms-1">
-            Favorite Location
+    <div
+      onClick={() => onSelectCity(favoriteCity)}
+      className="group flex items-center gap-2 sm:gap-3 px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl bg-white/10 hover:bg-white/20 cursor-pointer transition mb-3"
+    >
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-yellow-400/80 font-medium">
+            ★ Favorite
           </span>
         </div>
-
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenInfoModal(favoriteCity);
-          }}
-          className="p-1 rounded hover:bg-white/20"
-        >
-          <Info strokeWidth={1} className="w-5 h-5 text-white" />
-        </button>
-      </div>
-
-      {/* FAVORITE CITY ROW */}
-      <div
-        onClick={() => onSelectCity(favoriteCity)}
-        className="flex items-center justify-between w-full p-2 rounded-lg hover:bg-white/20 cursor-pointer"
-      >
-        <span className="text-white/90 text-sm ms-5 truncate flex-1">
+        <p className="text-sm text-white/90 truncate mt-0.5">
           {favoriteCity.name}
-        </span>
-
-        <div className="flex items-center gap-2 min-w-[72px] justify-end shrink-0">
-          {weatherInfo && (
-            <img
-              src={`/icons/meteocons/${weatherInfo.icon}`}
-              alt={weatherInfo.text}
-              className="w-8 h-8 opacity-90"
-              draggable={false}
-            />
-          )}
-
-          <span className="text-white/90 text-sm leading-none whitespace-nowrap">
-            {loading
-              ? "..."
-              : weather?.temp !== undefined
-              ? Math.round(weather.temp) + unitSymbol
-              : "--"}
-          </span>
-        </div>
+        </p>
       </div>
 
-      <hr className="border-white/20 my-2" />
+      <div className="flex items-center gap-1.5 shrink-0">
+        {weatherInfo && (
+          <img
+            src={`/icons/meteocons/${weatherInfo.icon}`}
+            alt={weatherInfo.text}
+            className="w-7 h-7 opacity-90"
+            draggable={false}
+          />
+        )}
+        <span className="text-sm font-semibold text-white/90 tabular-nums">
+          {weather?.temp !== undefined
+            ? Math.round(weather.temp) + unitSymbol
+            : "--"}
+        </span>
+      </div>
     </div>
   );
 }

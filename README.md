@@ -1,73 +1,120 @@
-# React + TypeScript + Vite
+# Weather App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern weather app built with React 19, TypeScript, and Vite. Features real-time weather data, dynamic glass-morphism UI, and automatic location detection — no API keys required.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Current Weather** — Temperature, feels-like, condition description, high/low
+- **Hourly Forecast** — 24-hour scrollable strip with temperature and precipitation probability
+- **Weekly Forecast** — 7-day (expandable to 16-day) forecast with high/low and precipitation
+- **Detail Cards** — UV index, humidity, wind speed + direction compass, sunrise/sunset, air quality index (AQI)
+- **Dynamic Background** — HSL gradient adapts to weather condition and time of day (night/dawn/day/dusk)
+- **Automatic Location Detection** — On first run, uses Geolocation API + Nominatim reverse geocode
+- **Location Management** — Search and save cities, mark favorite, add/drop cities
+- **Temperature Units** — Toggle Celsius/Fahrenheit, persisted to localStorage
+- **Pull to Refresh** — Touch gesture to refresh weather data
+- **Share Weather** — Floating button to share via native share sheet or clipboard
+- **Responsive** — Layout adapts from mobile to tablet with Samsung Weather–inspired hierarchy
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Technology | Purpose |
+|---|---|
+| React 19 | UI framework |
+| TypeScript 5.9 | Type safety |
+| Vite 7 | Build tool & dev server |
+| Tailwind CSS v4 | Styling with glass-morphism |
+| Lucide React | Icon library |
 
-## Expanding the ESLint configuration
+### APIs (all free, no keys)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- [Open-Meteo](https://open-meteo.com) — Weather forecast (current, hourly, daily) + air quality
+- [Nominatim](https://nominatim.openstreetmap.org) — Geocoding and reverse geocoding
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Icons
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Weather icons in `public/icons/meteocons/` (16 static SVGs) mapped from WMO weather codes.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Getting Started
+
+```bash
+# Install
+npm install
+
+# Dev server
+npm run dev
+
+# Build (type-check + production bundle)
+npm run build
+
+# Preview production
+npm run preview
+
+# Lint
+npm run lint
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Environment Variables
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| Variable | Default | Description |
+|---|---|---|
+| `VITE_BASE_URL` | `https://api.open-meteo.com/v1/forecast` | Open-Meteo API base URL |
+| `VITE_TIMEZONE` | `Asia/Bangkok` | IANA timezone for weather data |
+| `VITE_LOCATION_BASE_URL` | `https://nominatim.openstreetmap.org/search` | Nominatim search endpoint |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Project Structure
+
 ```
+src/
+├── api/               # Fetch wrappers (weather, location, air quality)
+├── components/        # UI components
+│   ├── HourlyChart/   # 24-hour forecast strip
+│   ├── InfoCards/     # UV, humidity, wind, AQI, sunrise/sunset
+│   ├── Modal/         # Settings, manage locations, favorite info
+│   ├── Sidebar/       # Favorite location, city list, add-location
+│   ├── Skeleton/      # Reusable loading skeleton
+│   ├── WeatherHeader/ # Current conditions (temp, icon, description)
+│   └── WeeklyForecast/# 7/16-day forecast
+├── context/           # Settings context (temp unit, localStorage)
+├── hooks/             # Custom hooks
+│   ├── useWeather.ts          # Fetch weather + AQI
+│   ├── useCitiesStorage.ts    # City state with localStorage
+│   ├── useInitialLocation.ts  # Auto-detect on first run
+│   ├── usePullToRefresh.ts    # Touch gesture handler
+│   ├── useDayPhase.ts         # Night/dawn/day/dusk
+│   ├── useLocationSearch.ts   # Debounced search with AbortController
+│   └── ...
+├── types/             # TypeScript interfaces
+├── utils/             # Helpers (weather codes, colors, location formatting)
+└── App.tsx            # Root — composes hooks + layout
+```
+
+## Data Flow
+
+```
+App.tsx
+├── useInitialLocation()     → auto-detect city on first launch
+├── useCitiesStorage()       → cities[], activeCity (localStorage)
+├── useWeather(activeCity)   → current + hourly + weekly + AQI
+├── useDayPhase()            → "night" | "dawn" | "day" | "dusk"
+├── usePullToRefresh(refresh)→ touch gesture for re-fetch
+└── getBackgroundByWeather() → dynamic HSL gradient
+```
+
+## UI Hierarchy
+
+1. **Current conditions** — Big temperature, icon, description, high/low, feels-like
+2. **Hourly** — 24-hour scrollable strip with precipitation %
+3. **Weekly** — 7-day (toggle to 16-day) forecast
+4. **Details** — UV, humidity, wind direction, AQI, sunrise/sunset
+
+## Local Storage
+
+| Key | Purpose |
+|---|---|
+| `weather_cities` | Saved cities list (with active/favorite flags) |
+| `temp_unit` | Temperature unit preference (`celsius` / `fahrenheit`) |
+
+## Docs
+
+- [Open-Meteo API](.docs/open-meteo/README.md) — API reference for weather and air quality endpoints

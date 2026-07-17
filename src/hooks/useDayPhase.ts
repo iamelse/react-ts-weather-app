@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
 import type { DayPhase } from "../types/weather";
 
-// 🔥 DEV ONLY (UBAH UNTUK TEST)
 const DEV_FORCE_HOUR: number | null = null;
-// 6 = dawn | 12 = day | 18 = dusk | 22 = night
+
+const NIGHT_END = 5;
+const DAWN_END = 8;
+const DAY_END = 17;
+const DUSK_END = 19;
 
 const getPhaseFromHour = (hour: number): DayPhase => {
-  if (hour < 5) return "night";
-  if (hour < 8) return "dawn";
-  if (hour < 17) return "day";
-  if (hour < 19) return "dusk";
+  if (hour < NIGHT_END) return "night";
+  if (hour < DAWN_END) return "dawn";
+  if (hour < DAY_END) return "day";
+  if (hour < DUSK_END) return "dusk";
   return "night";
 };
 

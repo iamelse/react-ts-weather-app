@@ -5,15 +5,12 @@ import type { City } from "../../types/city";
 import { useFormattedDate } from "../../hooks/useFormattedDate";
 import WeatherIcon from "../WeatherIcon";
 import { getWeatherInfo } from "../../utils/weather";
+import { formatLocationName } from "../../utils/location";
 
 interface WeatherHeaderProps {
   weather: WeatherState;
   selectedCity?: City;
 }
-
-export const formatCityName = (name: string) => {
-  return name.split(",").slice(0, 3).join(", ");
-};
 
 export default function WeatherHeader({
   weather,
@@ -26,56 +23,52 @@ export default function WeatherHeader({
       <div className="w-full max-w-md mt-16 text-white/70">
         Loading location...
       </div>
-    );
+  );
   }
 
-  const weatherInfo = getWeatherInfo(weather.current_code, weather.is_day ? 1 : 0);
-
-  // console.log(weather);
-  // console.log(weatherInfo);
+  const weatherInfo = getWeatherInfo(weather.current_code, weather.is_day ?? 1);
 
   return (
-    <div className="w-full max-w-md mt-0">
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-6xl font-light drop-shadow-xs">
-            {formatTempDisplay(weather.temp)}°
-          </h1>
+    <div className="w-full max-w-md">
+      {/* Location */}
+      <div className="flex items-center justify-center gap-1.5 text-white/60 text-xs sm:text-sm mb-1">
+        <MapPin strokeWidth={1.5} className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
+        <span className="truncate max-w-[160px] sm:max-w-[220px]">
+          {formatLocationName(selectedCity.name)}
+        </span>
+      </div>
 
-          <p className="flex items-center gap-1 text-base mt-3 drop-shadow-xs">
-            <span className="truncate max-w-[220px]">
-              {formatCityName(selectedCity.name)}
-            </span>
-            <MapPin
-              strokeWidth={1}
-              className="w-4 h-4 text-white shrink-0"
-            />
-          </p>
+      {/* Date */}
+      <p className="text-center text-[11px] sm:text-xs text-white/40 mb-3 sm:mb-4">
+        {formattedDate}
+      </p>
 
-          <div className="my-5">
-            <p className="text-white/90 text-base drop-shadow-xs">
-              {formatTempDisplay(weather.weekly[0]?.temp_max)}° /{" "}
-              {formatTempDisplay(weather.weekly[0]?.temp_min)}° • feels{" "}
-              {formatTempDisplay(weather.feels_like)}°
-            </p>
+      {/* Temp + Icon */}
+      <div className="flex items-center justify-center gap-2 sm:gap-3">
+        <span className="text-7xl sm:text-8xl md:text-9xl font-thin tracking-tight drop-shadow-md leading-none">
+          {formatTempDisplay(weather.temp)}°
+        </span>
+        <WeatherIcon
+          name={weatherInfo.icon}
+          alt={weatherInfo.text}
+          size={72}
+        />
+      </div>
 
-            <p className="text-white/70 mt-1 text-sm drop-shadow-xs">
-              {formattedDate}
-            </p>
+      {/* Condition text */}
+      <p className="text-center text-sm sm:text-base font-medium text-white/85 mt-2 drop-shadow-xs">
+        {weatherInfo.text}
+      </p>
 
-            <p className="text-white/70 mt-1 text-sm drop-shadow-xs">
-              {weather.current_text}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center opacity-90 drop-shadow-xs">
-          <WeatherIcon
-            name={weatherInfo.icon}
-            alt={weatherInfo.text}
-            size={100}
-          />
-        </div>
+      {/* High/Low + Feels like */}
+      <div className="flex items-center justify-center gap-2 sm:gap-3 mt-2 text-xs sm:text-sm text-white/65 flex-wrap">
+        {weather.weekly[0] && (
+          <span className="whitespace-nowrap">
+            H:{formatTempDisplay(weather.weekly[0].temp_max)}° L:{formatTempDisplay(weather.weekly[0].temp_min)}°
+          </span>
+        )}
+        <span className="text-white/30">•</span>
+        <span className="whitespace-nowrap">Feels like {formatTempDisplay(weather.feels_like)}°</span>
       </div>
     </div>
   );

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { CurrentWeather } from "../types/weather";
 import type { City } from "../types/city";
 import { fetchCurrentCityWeather } from "../api/weather";
-import { useSettings } from "../context/SettingsContext";
+import { useSettings } from "./useSettings";
 
 export const useFavoriteWeather = (city: City | null) => {
   const { unit } = useSettings(); // 🔥 ambil unit dari settings

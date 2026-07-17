@@ -1,17 +1,15 @@
 import type { Location } from "../types/location";
 
-/* ==========================
-   BASE URL
-========================== */
 const LOCATION_BASE_URL =
   import.meta.env.VITE_LOCATION_BASE_URL ??
   "https://nominatim.openstreetmap.org/search";
 
-/* ==========================
-   FETCH LOCATION SEARCH
-========================== */
+const REVERSE_BASE_URL =
+  "https://nominatim.openstreetmap.org/reverse";
+
 export const fetchLocations = async (
-  query: string
+  query: string,
+  signal?: AbortSignal
 ): Promise<Location[]> => {
   if (!query.trim()) return [];
 
@@ -20,6 +18,7 @@ export const fetchLocations = async (
       query
     )}&format=json&limit=5`,
     {
+      signal,
       headers: {
         Accept: "application/json",
       },
@@ -31,4 +30,25 @@ export const fetchLocations = async (
   }
 
   return res.json();
+};
+
+export const reverseGeocode = async (
+  lat: number,
+  lon: number
+): Promise<Location | null> => {
+  const res = await fetch(
+    `${REVERSE_BASE_URL}?lat=${lat}&lon=${lon}&format=json`,
+    { headers: { Accept: "application/json" } }
+  );
+
+  if (!res.ok) return null;
+
+  const data = await res.json();
+  if (!data || data.error) return null;
+
+  return {
+    lat: String(lat),
+    lon: String(lon),
+    display_name: data.display_name ?? `${lat}, ${lon}`,
+  };
 };
