@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import type { City } from "../types/city";
 import { getStoredCities, saveCities } from "../utils/cityStorage";
 
@@ -10,7 +10,10 @@ const fallbackCity: City = {
   is_favorite: true,
 };
 
-export function useCitiesStorage(detectedCity?: City | null) {
+export function useCitiesStorage(
+  detectedCity?: City | null,
+  geoLocated = false
+) {
   const [cities, setCities] = useState<City[]>(() => {
     const stored = getStoredCities();
     return stored && stored.length ? stored : [fallbackCity];
@@ -40,12 +43,22 @@ export function useCitiesStorage(detectedCity?: City | null) {
     () => favoriteCity ?? cities[0]
   );
 
+  const geoApplied = useRef(false);
+
+  useEffect(() => {
+    if (geoLocated && detectedCity && !geoApplied.current) {
+      geoApplied.current = true;
+      setTimeout(() => setActiveCity(detectedCity), 0);
+    }
+  }, [detectedCity, geoLocated]);
+
   const persist = (next: City[]) => {
     saveCities(next);
     setCities(next);
   };
 
   const selectCity = (city: City) => {
+    geoApplied.current = true;
     setActiveCity(city);
   };
 
@@ -65,6 +78,11 @@ export function useCitiesStorage(detectedCity?: City | null) {
     persist(next);
   };
 
+  const overrideWithGeoCity = useCallback((city: City) => {
+    geoApplied.current = false;
+    setActiveCity(city);
+  }, []);
+
   return {
     cities,
     activeCity,
@@ -72,5 +90,6 @@ export function useCitiesStorage(detectedCity?: City | null) {
     selectCity,
     setFavoriteCity,
     updateCities,
+    overrideWithGeoCity,
   };
 }

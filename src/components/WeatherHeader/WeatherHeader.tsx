@@ -1,4 +1,4 @@
-import { MapPin } from "lucide-react";
+import { MapPin, LocateFixed } from "lucide-react";
 import { formatTempDisplay } from "../../utils";
 import type { WeatherState } from "../../types/weather";
 import type { City } from "../../types/city";
@@ -10,11 +10,17 @@ import { formatLocationName } from "../../utils/location";
 interface WeatherHeaderProps {
   weather: WeatherState;
   selectedCity?: City;
+  geoLocated?: boolean;
+  geoDenied?: boolean;
+  onUseMyLocation?: () => void;
 }
 
 export default function WeatherHeader({
   weather,
   selectedCity,
+  geoLocated,
+  geoDenied,
+  onUseMyLocation,
 }: WeatherHeaderProps) {
   const formattedDate = useFormattedDate();
 
@@ -23,7 +29,7 @@ export default function WeatherHeader({
       <div className="w-full max-w-md mt-16 text-white/70">
         Loading location...
       </div>
-  );
+    );
   }
 
   const weatherInfo = getWeatherInfo(weather.current_code, weather.is_day ?? 1);
@@ -36,6 +42,24 @@ export default function WeatherHeader({
         <span className="truncate max-w-[160px] sm:max-w-[220px]">
           {formatLocationName(selectedCity.name)}
         </span>
+        <button
+          onClick={onUseMyLocation}
+          className={`p-1 rounded-lg transition-colors ${
+            geoDenied
+              ? "text-red-400 hover:text-red-300"
+              : geoLocated
+                ? "text-sky-300 hover:text-sky-200"
+                : "text-white/40 hover:text-white/70"
+          }`}
+          aria-label="Use my location"
+          title={
+            geoDenied
+              ? "Location access denied — click to try again"
+              : "Use my location"
+          }
+        >
+          <LocateFixed strokeWidth={1.5} className="w-3.5 h-3.5" />
+        </button>
       </div>
 
       {/* Date */}

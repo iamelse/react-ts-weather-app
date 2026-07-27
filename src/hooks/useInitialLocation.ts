@@ -1,18 +1,66 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import type { City } from "../types/city";
 import { getStoredCities, saveCities } from "../utils/cityStorage";
 import { reverseGeocode } from "../api/location";
 
 export function useInitialLocation() {
   const [detectedCity, setDetectedCity] = useState<City | null>(null);
-  const [detecting, setDetecting] = useState(true);
+  const [detecting, setDetecting] = useState<boolean>(() => {
+    const stored = getStoredCities();
+    return !(stored && stored.length > 0);
+  });
+  const [geoLocated, setGeoLocated] = useState(false);
+  const [geoDenied, setGeoDenied] = useState(false);
+
+  const detectPosition = useCallback(async (): Promise<City | null> => {
+    if (!navigator.geolocation) return null;
+
+    try {
+      const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: false,
+          timeout: 10000,
+        });
+      });
+
+      const loc = await reverseGeocode(
+        pos.coords.latitude,
+        pos.coords.longitude
+      );
+
+      if (!loc) return null;
+
+      return {
+        name: loc.display_name,
+        country: "",
+        latitude: +loc.lat,
+        longitude: +loc.lon,
+        is_favorite: true,
+      };
+    } catch (err) {
+      if (
+        err instanceof GeolocationPositionError &&
+        err.code === GeolocationPositionError.PERMISSION_DENIED
+      ) {
+        setGeoDenied(true);
+      }
+      return null;
+    }
+  }, []);
+
+  const requestLocation = useCallback(async (): Promise<City | null> => {
+    const city = await detectPosition();
+    if (city) {
+      setDetectedCity(city);
+      setGeoLocated(true);
+      setGeoDenied(false);
+    }
+    return city;
+  }, [detectPosition]);
 
   useEffect(() => {
     const stored = getStoredCities();
-    if (stored && stored.length > 0) {
-      setTimeout(() => setDetecting(false), 0);
-      return;
-    }
+    const hasStored = stored && stored.length > 0;
 
     if (!navigator.geolocation) {
       setTimeout(() => setDetecting(false), 0);
@@ -21,44 +69,40 @@ export function useInitialLocation() {
 
     let cancelled = false;
 
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        if (cancelled) return;
+    const run = async () => {
+      let permissionState = "prompt";
+      try {
+        const result = await navigator.permissions.query({
+          name: "geolocation",
+        } as PermissionDescriptor);
+        permissionState = result.state;
+      } catch {
+        // Permissions API not supported — treat as prompt
+      }
 
-        try {
-          const loc = await reverseGeocode(
-            pos.coords.latitude,
-            pos.coords.longitude
-          );
+      if (cancelled) return;
 
-          if (!cancelled && loc) {
-            const city: City = {
-              name: loc.display_name,
-              country: "",
-              latitude: +loc.lat,
-              longitude: +loc.lon,
-              is_favorite: true,
-            };
-
-            saveCities([city]);
-            setDetectedCity(city);
-          }
-        } catch {
-          // reverse geocode failed, use fallback
+      if (permissionState === "granted") {
+        const city = await detectPosition();
+        if (!cancelled && city) {
+          setDetectedCity(city);
+          setGeoLocated(true);
+          if (!hasStored) saveCities([city]);
         }
+      } else if (permissionState === "denied") {
+        setGeoDenied(true);
+      }
+      // "prompt" → don't auto-call, wait for user action
 
-        if (!cancelled) setDetecting(false);
-      },
-      () => {
-        if (!cancelled) setDetecting(false);
-      },
-      { enableHighAccuracy: false, timeout: 10000 }
-    );
+      if (!cancelled) setDetecting(false);
+    };
+
+    run();
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [detectPosition]);
 
-  return { detectedCity, detecting };
+  return { detectedCity, detecting, geoLocated, geoDenied, requestLocation };
 }

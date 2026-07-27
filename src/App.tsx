@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { Menu, Loader2 } from "lucide-react";
+import { useState, useCallback, useEffect, useMemo } from "react";
+import { Menu, Loader2, X } from "lucide-react";
 
 import Sidebar from "./components/Sidebar/Sidebar";
 import WeatherHeader from "./components/WeatherHeader/WeatherHeader";
@@ -24,19 +24,50 @@ import { useCitiesStorage } from "./hooks/useCitiesStorage";
 import { usePullToRefresh } from "./hooks/usePullToRefresh";
 import { useInitialLocation } from "./hooks/useInitialLocation";
 
+const LOADING_BG = { from: "#1a2a3a", to: "#0d1b2a" };
+
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeModal, setActiveModal] = useState<"manage" | "settings" | null>(null);
   const [forecastDays, setForecastDays] = useState(7);
 
-  const { detectedCity, detecting } = useInitialLocation();
-  const { cities, activeCity, updateCities, selectCity } =
-    useCitiesStorage(detectedCity);
+  const { detectedCity, detecting, geoLocated, geoDenied, requestLocation } =
+    useInitialLocation();
+  const [locationToast, setLocationToast] = useState(false);
+
+  useEffect(() => {
+    if (geoDenied) setTimeout(() => setLocationToast(true), 0);
+  }, [geoDenied]);
+
+  useEffect(() => {
+    if (!locationToast) return;
+    const t = setTimeout(() => setLocationToast(false), 5000);
+    return () => clearTimeout(t);
+  }, [locationToast]);
+
+  const handleDismissToast = () => setLocationToast(false);
+  const { cities, activeCity, updateCities, selectCity, overrideWithGeoCity } =
+    useCitiesStorage(detectedCity, geoLocated);
 
   const BASE_URL = import.meta.env.VITE_BASE_URL || "https://api.open-meteo.com/v1/forecast";
   const { weather, loading, error, refresh } = useWeather(activeCity, BASE_URL, forecastDays);
   const phase = useDayPhase();
-  const bgGradient = getBackgroundByWeather(weather.current_code, phase);
+  const bgGradient = useMemo(
+    () => getBackgroundByWeather(weather.current_code, phase),
+    [weather.current_code, phase]
+  );
+
+  const [bgReady, setBgReady] = useState(false);
+
+  useEffect(() => {
+    if (!loading) setTimeout(() => setBgReady(true), 0);
+  }, [loading]);
+
+  useEffect(() => {
+    if (!activeCity) return;
+    const name = formatLocationName(activeCity.name).split(",")[0];
+    document.title = `${name} · Weather`;
+  }, [activeCity]);
 
   const {
     state: ptrState,
@@ -61,6 +92,11 @@ export default function App() {
     }
   }, [weather, activeCity]);
 
+  const handleUseMyLocation = useCallback(async () => {
+    const city = await requestLocation();
+    if (city) overrideWithGeoCity(city);
+  }, [requestLocation, overrideWithGeoCity]);
+
   if (detecting) {
     return (
       <div
@@ -78,13 +114,25 @@ export default function App() {
   return (
     <div
       className="min-h-screen w-full text-white relative overflow-x-hidden"
-      style={{
-        background: `linear-gradient(to bottom, ${bgGradient.from}, ${bgGradient.to})`,
-      }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
+      {/* ================= BACKGROUND LAYERS ================= */}
+      <div
+        className="fixed inset-0 z-0"
+        style={{
+          background: `linear-gradient(to bottom, ${LOADING_BG.from}, ${LOADING_BG.to})`,
+        }}
+      />
+      <div
+        className="fixed inset-0 z-0 transition-opacity duration-700 ease-out"
+        style={{
+          background: `linear-gradient(to bottom, ${bgGradient.from}, ${bgGradient.to})`,
+          opacity: bgReady ? 1 : 0,
+        }}
+      />
+
       {/* ================= SIDEBAR ================= */}
       <Sidebar
         menuOpen={menuOpen}
@@ -123,6 +171,16 @@ export default function App() {
         <Menu className="w-5 h-5 text-white" />
       </button>
 
+      {/* ================= LOCATION TOAST ================= */}
+      {locationToast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-xl bg-yellow-500/20 backdrop-blur-md border border-yellow-500/30 text-xs text-yellow-200 shadow-lg animate-fade-in">
+          <span>Location access denied — showing saved city</span>
+          <button onClick={handleDismissToast} className="p-0.5 hover:text-white transition-colors">
+            <X className="w-3.5 h-3.5" strokeWidth={2} />
+          </button>
+        </div>
+      )}
+
       {/* ================= PULL TO REFRESH ================= */}
       <PullToRefreshIndicator state={ptrState} pullDistance={pullDistance} />
 
@@ -140,7 +198,13 @@ export default function App() {
         ) : (
           <>
             {/* 1. CURRENT CONDITIONS — suhu, cuaca, lokasi */}
-            <WeatherHeader weather={weather} selectedCity={activeCity} />
+            <WeatherHeader
+              weather={weather}
+              selectedCity={activeCity}
+              geoLocated={geoLocated}
+              geoDenied={geoDenied}
+              onUseMyLocation={handleUseMyLocation}
+            />
 
             {/* 2. HOURLY — 24 jam ke depan */}
             <HourlyChart hourly={weather.hourly} />
