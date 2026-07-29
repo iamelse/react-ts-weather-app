@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useCallback } from "react";
 import type { City } from "../types/city";
 import { getStoredCities, saveCities } from "../utils/cityStorage";
 
@@ -31,7 +31,7 @@ export function useCitiesStorage(
     if (!detectedCity) return;
 
     initialized.current = true;
-    setTimeout(() => setCities([detectedCity]), 0);
+    setCities([detectedCity]);
   }, [detectedCity]);
 
   const favoriteCity = useMemo(
@@ -45,17 +45,44 @@ export function useCitiesStorage(
 
   const geoApplied = useRef(false);
 
-  useEffect(() => {
-    if (geoLocated && detectedCity && !geoApplied.current) {
-      geoApplied.current = true;
-      setTimeout(() => setActiveCity(detectedCity), 0);
-    }
-  }, [detectedCity, geoLocated]);
-
   const persist = (next: City[]) => {
     saveCities(next);
     setCities(next);
   };
+
+  const promoteToFavorite = useCallback((city: City) => {
+    const stored = getStoredCities();
+    if (stored && stored.length > 0) {
+      const exists = stored.some(
+        (c) => c.latitude === city.latitude && c.longitude === city.longitude
+      );
+      const updated = stored.map((c) => ({
+        ...c,
+        is_favorite: false,
+      }));
+      if (exists) {
+        for (const c of updated) {
+          if (c.latitude === city.latitude && c.longitude === city.longitude) {
+            c.is_favorite = true;
+            break;
+          }
+        }
+      } else {
+        updated.push({ ...city, is_favorite: true });
+      }
+      persist(updated);
+    } else {
+      persist([{ ...city, is_favorite: true }]);
+    }
+  }, []);
+
+  useLayoutEffect(() => {
+    if (geoLocated && detectedCity && !geoApplied.current) {
+      geoApplied.current = true;
+      promoteToFavorite(detectedCity);
+      setActiveCity(detectedCity);
+    }
+  }, [detectedCity, geoLocated, promoteToFavorite]);
 
   const selectCity = (city: City) => {
     geoApplied.current = true;
@@ -79,9 +106,10 @@ export function useCitiesStorage(
   };
 
   const overrideWithGeoCity = useCallback((city: City) => {
-    geoApplied.current = false;
+    geoApplied.current = true;
+    promoteToFavorite(city);
     setActiveCity(city);
-  }, []);
+  }, [promoteToFavorite]);
 
   return {
     cities,

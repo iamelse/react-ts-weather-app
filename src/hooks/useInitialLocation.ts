@@ -1,14 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
 import type { City } from "../types/city";
-import { getStoredCities, saveCities } from "../utils/cityStorage";
 import { reverseGeocode } from "../api/location";
 
 export function useInitialLocation() {
   const [detectedCity, setDetectedCity] = useState<City | null>(null);
-  const [detecting, setDetecting] = useState<boolean>(() => {
-    const stored = getStoredCities();
-    return !(stored && stored.length > 0);
-  });
+  const [detecting, setDetecting] = useState(true);
   const [geoLocated, setGeoLocated] = useState(false);
   const [geoDenied, setGeoDenied] = useState(false);
 
@@ -35,7 +31,7 @@ export function useInitialLocation() {
         country: "",
         latitude: +loc.lat,
         longitude: +loc.lon,
-        is_favorite: true,
+        is_favorite: false,
       };
     } catch (err) {
       if (
@@ -59,9 +55,6 @@ export function useInitialLocation() {
   }, [detectPosition]);
 
   useEffect(() => {
-    const stored = getStoredCities();
-    const hasStored = stored && stored.length > 0;
-
     if (!navigator.geolocation) {
       setTimeout(() => setDetecting(false), 0);
       return;
@@ -87,7 +80,6 @@ export function useInitialLocation() {
         if (!cancelled && city) {
           setDetectedCity(city);
           setGeoLocated(true);
-          if (!hasStored) saveCities([city]);
         }
       } else if (permissionState === "denied") {
         setGeoDenied(true);
